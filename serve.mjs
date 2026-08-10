@@ -37,31 +37,7 @@ function resolve(urlPath) {
   return null;
 }
 
-// Webflow's commerce JS asks its backend for a CSRF token before rendering
-// product/cart pages. There is no backend here, so mint one locally and mirror
-// the live response shape ({"ok":1} + a wf-csrf cookie) to keep those pages quiet.
-function wfGraphqlStub(req, res) {
-  const p = req.url.split('?')[0];
-  if (!p.startsWith('/.wf_graphql/')) return false;
-  const token = Buffer.from(String(Math.random()) + Date.now()).toString('base64url').slice(0, 43);
-  const headers = {
-    'Content-Type': 'application/json',
-    'Cache-Control': 'no-store',
-  };
-  if (p.endsWith('/csrf')) {
-    headers['Set-Cookie'] = [`wf-csrf=${token}; path=/; samesite=lax`, `wf-csrf.sig=${token}; path=/; samesite=lax; httponly`];
-    res.writeHead(200, headers);
-    return res.end(JSON.stringify({ ok: 1 })), true;
-  }
-  // Every other commerce call (apollo, …) needs a real Webflow backend. The live
-  // site answers those with 401 for anonymous visitors and its JS degrades
-  // cleanly, so return the same thing rather than a body the JS can't parse.
-  res.writeHead(401, headers);
-  return res.end(JSON.stringify({ ok: 0, msg: 'Unauthorized', code: 'Unauthorized' })), true;
-}
-
 http.createServer((req, res) => {
-  if (wfGraphqlStub(req, res)) return;
   const file = resolve(req.url);
   if (!file) {
     res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });

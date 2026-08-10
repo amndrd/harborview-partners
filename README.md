@@ -162,25 +162,26 @@ bannière de consentement CookieYes (qui aurait recouvert le site). Retirés des
 Le gate de dev Vite (`localhost:3000`, actif uniquement sur le domaine de staging
 Webflow) a aussi été retiré — il était inerte.
 
-## Limite connue : l'e-commerce
+## Boutique retirée
 
-Les 18 pages boutique (`/product/*`, `/cart`, `/checkout`, …) s'affichent à
-l'identique, mais **le panier et le paiement ne fonctionnent pas**. Ils dépendent
-du backend hébergé par Webflow (`/.wf_graphql/apollo`), qui ne fait pas partie des
-fichiers du site et ne peut donc pas être copié. Ces pages laissent une erreur 401
-en console — sans effet visuel.
+Toute la partie commerce a été supprimée : `/merchandises`, les 14 fiches
+produits, `/cart`, `/checkout`, `/paypal-checkout`, `/order-confirmation`, ainsi
+que les trois politiques qui n'existaient que pour elle (paiement, remboursement,
+livraison). Soit **21 pages sur 61** ; il en reste 40.
 
-Deux compensations côté copie :
+Retirés en cascade dans les pages restantes : le panier du header (bloc commerce
+Webflow), le script Stripe et ses deux clés `pk_live_`, l'entrée « Merchandise »
+du footer, les liens vers les politiques commerce, et `assets/mirror-fixups.js`
+qui ne servait qu'aux variantes de produits — 392 références sur 40 pages. Le stub
+`/.wf_graphql` de `serve.mjs` a suivi : plus aucun appel n'est émis. Enfin
+34 visuels produits devenus orphelins ont été supprimés du `cdn/` (3,4 Mo).
 
-- `serve.mjs` répond au endpoint CSRF comme le fait le site live (`{"ok":1}` +
-  cookie `wf-csrf`), ce qui évite un crash JS au chargement.
-- `assets/mirror-fixups.js` re-applique la classe `w--ecommerce-pill-selected`
-  sur la première variante de chaque produit — c'est normalement le script
-  commerce qui le fait. Purement cosmétique.
+**Effet de bord bienvenu** : les erreurs 401 qui apparaissaient en console sur
+toutes les pages venaient du panier. Il n'y a désormais plus aucune requête en
+échec, sur aucune page.
 
-Le tag Stripe des pages boutique pointe toujours vers la clé publique du site
-d'origine. Elle est publique par nature et inerte sans le backend, mais à
-remplacer si la copie est mise en ligne.
+Le CSS et le JS de Webflow contiennent encore du code commerce inutilisé. Il est
+inerte et n'a pas été retiré, pour ne pas toucher aux bundles.
 
 ## Autres détails
 
@@ -194,17 +195,14 @@ remplacer si la copie est mise en ligne.
 
 ## Vérification effectuée
 
-Comparaison automatisée live / copie sous Chromium (1440×900) : captures d'écran
-côte à côte, erreurs console et requêtes échouées, sur les 61 pages avec scroll
-complet pour déclencher les animations et le lazy-loading.
+Crawl Chromium des 40 pages restantes, avec contrôle des erreurs console et des
+requêtes échouées :
 
-- **1140 références d'assets locales, 0 manquante**
-- 43/61 pages sans aucune erreur console ; les 18 autres ne portent que le 401
-  commerce décrit plus haut
-- Rendu pixel-identique au live sur les pages contrôlées. Les seules différences
-  sont des états d'animation en cours — phase de rotation du globe, frame de la
-  vidéo de fond, titre du bandeau news — ce qui confirme que les animations
-  tournent.
+- **40 pages en 200, aucune en échec**
+- **2 805 références locales vérifiées, aucune cible manquante**
+  (5 remontées sont des faux positifs de l'extracteur : `url(#b)` et des chemins
+  encodés dans des attributs JSON échappés — fichiers vérifiés présents)
+- plus aucune erreur console ni requête en échec depuis le retrait de la boutique
 
 ## Reproduire / rafraîchir la capture
 
