@@ -71,7 +71,7 @@ webclips 180/192/512, avatar `hp-avt`, et l'image de partage `OG.jpg`.
 
 Le bloc avait d'abord été centré, mais la largeur du titre étant figée sur le mot
 le plus long, le texte visible dérivait jusqu'à ~80 px selon le mot affiché.
-Aligné à gauche, l'aplomb est franc — et le globe reste dégagé à droite.
+Aligné à gauche, l'aplomb est franc — et la sphère reste dégagée à droite.
 
 ## Titre du hero (accueil)
 
@@ -127,6 +127,59 @@ Corps en `7vw` avec `white-space:nowrap`. Vérifié de 390 à 1920 px : deux lig
 sans débordement, et le bloc ne bouge pas d'un pixel entre le chargement et les
 changements de mot.
 
+## Arrière-plan du hero (accueil)
+
+Le globe terrestre en Three.js et le ciel étoilé en image ont été remplacés par une
+**sphère de points** dessinée au canvas 2D : des points à la surface *et* à
+l'intérieur d'une sphère, reliés à leurs plus proches voisins. Les liaisons se
+nouent, vivent, se défont et repartent ailleurs. Noir absolu, blanc seul — plus
+aucune couleur de marque dans le hero.
+
+- Source de référence : `background/sphere.html`, page autonome où se règlent les
+  paramètres. `assets/hero-sphere.js` en est la reprise câblée dans la page ; le
+  bloc `CFG` est identique de part et d'autre, on peut donc régler dans l'une et
+  reporter dans l'autre.
+- Markup : `<div class="hv-bg">` (canvas + voile + vignette + grain), premier
+  enfant de `.home-hero-stick`. Ce parent étant collant, le calque reste fixe
+  pendant les 150 vh du hero, exactement comme le globe qu'il remplace.
+- CSS dans le `<style>` embarqué d'`index.html`.
+
+Trois écarts avec la page de référence, imposés par le site :
+
+- **Le site est une SPA.** Barba récupère les pages en XHR : le hero est un nœud
+  neuf à chaque retour sur l'accueil. Un `MutationObserver` compare le canvas
+  courant à celui de l'instance en cours — nouveau canvas, nouvelle instance ;
+  plus de canvas, on démonte (boucle, `ResizeObserver` et écouteurs compris).
+- **Le glisser est écouté sur `document`.** `.home-hero-text-wrap` couvre toute la
+  largeur du hero par-dessus le canvas (z-index 2) et avalerait les événements. Le
+  canvas reste donc en `pointer-events:none` et l'on teste soi-même si le pointeur
+  est sur la sphère, en laissant passer liens et boutons. Rotation désactivée sous
+  768 px, comme l'était celle du globe.
+- **Le fondu au scroll est rejoué.** Le thème effaçait `.home-hero-globe` et
+  `.home-hero-bg-star` pendant que la section suivante remontait ; ces deux
+  éléments ayant disparu, `hero-sphere.js` reproduit le fondu sur les mêmes bornes
+  (`top top-=20%` → `center top`, au-dessus de 991 px). Il porte sur le canvas et
+  non sur le calque : le noir du fond, lui, doit tenir jusqu'au bout.
+
+**Mobile.** L'accueil affichait une image fixe (`Hero-MB.png`) au lieu du globe.
+L'animation tourne désormais aussi en portrait : la sphère monte en haut de
+l'écran, le texte garde le milieu, et le voile bascule de l'horizontale à la
+verticale (`@media (max-aspect-ratio: 9/10)`).
+
+**Un squelette masqué subsiste.** La timeline d'intro du thème
+(`app/chunks/Home-*.js`, minifié) cible encore `.home-hero-globe`,
+`.home-hero-canvas`, `.home-hero-globe-shadow`, `.globe-label-text`,
+`.home-hero-bg-star` et `.home-hero-bg-mb`. Un bloc `.hv-theme-hooks` vide et en
+`display:none` lui rend ses cibles : sans lui, GSAP avertit trois fois à chaque
+chargement. Rien n'en sort — c'est le prix à payer pour ne pas toucher au bundle.
+
+Le chargement de Three.js n'est pas supprimé pour autant : `setupGlobe()` sort de
+lui-même faute de `#globe`, mais le moteur reste tiré par la scène océan, plus bas
+sur la page.
+
+Sept visuels devenus orphelins ont été supprimés du `cdn/` (332 Ko) : les quatre
+tailles du ciel étoilé, les deux du halo du globe, et l'image de repli mobile.
+
 ## Lancer le site
 
 ```bash
@@ -146,9 +199,10 @@ des chemins absolus depuis la racine.
 | `cdn/`     | Tous les médias Webflow : images, `srcset` responsives, 650 frames AVIF des séquences animées, vidéos MP4/WebM, polices, CSS |
 | `app/`     | L'application custom du site (Vite/Rolldown) : Three.js, GSAP, Barba.js, Lenis, Swiper, curseur custom — 34 chunks |
 | `vendor/`  | jQuery et la librairie Finsweet Attributes (47 chunks) |
-| `images/ocean/` | Textures de la scène Three.js du hero |
-| `assets/`  | `mirror-fixups.js` — voir plus bas |
-| `serve.mjs` | Serveur statique (URLs propres, `Range` pour les vidéos, stub commerce) |
+| `images/ocean/` | Textures de la scène Three.js de l'accueil |
+| `assets/`  | `hero-word-cycle.js` (titre du hero) et `hero-sphere.js` (arrière-plan du hero) |
+| `background/` | `sphere.html` — page de référence de l'arrière-plan, autonome et réglable |
+| `serve.mjs` | Serveur statique (URLs propres, `Range` pour les vidéos) |
 
 Tout est **auto-hébergé** : aucune requête ne sort vers le CDN d'origine.
 
