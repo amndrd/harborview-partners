@@ -1398,8 +1398,12 @@
   /* .header.on-hide .header-inner {
     transform: translateY(-101%);
   } */
+  /* La rangée reste transparente au défilement : elle flotte au-dessus du
+     contenu au lieu de poser un bandeau blanc. Seule la couleur du texte
+     bascule encore, la règle .on-dark juste dessous la repassant en clair
+     au-dessus des sections sombres. */
   .header.on-scroll .header-inner {
-    background-color: white;
+    background-color: transparent;
     color: #111;
   }
 
