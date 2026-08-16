@@ -40,11 +40,22 @@
   --hv-refract: blur(7px) saturate(112%) brightness(1.5);
   --hv-shadow: drop-shadow(0 0.2rem 0.55rem rgba(0, 0, 0, 0.38));
 
+  /* Taille visible de la marque, et hauteur qu'occupait l'ancien wordmark. */
+  --hv-size: 5rem;
+  --hv-flow-height: 1.6rem;
+
   position: relative;
   display: block;
-  width: 5rem;
+  width: var(--hv-size);
   aspect-ratio: 194 / 198;
   flex: none;
+
+  /* L'en-tête est superposé au contenu par un margin-bottom négatif fixe
+     (-11.9rem dans le thème) : tout ce qui le rallonge repousse d'autant la
+     première section et découvre une bande de <body> blanc en haut du hero.
+     On ramène donc la hauteur de flux du logo à celle du wordmark qu'il
+     remplace — la marque déborde de sa boîte au lieu de l'agrandir. */
+  margin-block: calc((var(--hv-flow-height) - var(--hv-size) * 198 / 194) / 2);
 }
 
 /* Calque 1 — réfraction. mask-mode explicite : sans lui, certains moteurs
@@ -161,5 +172,5 @@
 }
 
 /* Pas de règle par palier : le rem du thème est déjà indexé sur la largeur de
-   fenêtre (0.578vw en desktop, 2.545vw en mobile), donc 5rem tient ~47 px du
-   plus large écran au plus étroit. */
+   fenêtre (0.578vw en desktop, 2.545vw en mobile), donc --hv-size tient ~47 px
+   du plus large écran au plus étroit. */
