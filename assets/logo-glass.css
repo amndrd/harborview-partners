@@ -1,0 +1,165 @@
+/* ── Logo Harborview « liquid glass » ──────────────────────────────────────
+   Le wordmark « H —— P » de l'en-tête est remplacé par la marque
+   /assets/logo.svg. Le rendu verre se joue sur deux calques empilés dans
+   .hv-logo :
+
+     1. .hv-logo-refract  un calque backdrop-filter masqué par la silhouette
+                          du logo. Il floute et sature ce qui passe derrière
+                          (la sphère de points du hero) : c'est ce qui donne
+                          au verre son épaisseur, plutôt qu'un simple aplat
+                          blanc semi-transparent.
+     2. .hv-logo-mark     le SVG inline. Corps laiteux creusé au centre,
+                          liseré spéculaire sur le contour, tache de lumière
+                          en haut à gauche. Tout est fixe : aucun reflet ne
+                          se déplace.
+
+   Toutes les couleurs passent par des variables : quand l'en-tête devient
+   blanc au scroll (.header.on-scroll), la marque bascule en verre graphite
+   pour rester lisible. Attention en modifiant : aucun `filter` ni `opacity`
+   sur .hv-logo ou ses parents, cela couperait le backdrop-filter du calque 1
+   (l'élément deviendrait une « backdrop root » et le verre se viderait). */
+
+.hv-logo {
+  /* Teinte et densité du verre. Le corps est nettement plus transparent au
+     centre (--hv-fill-core) que sur ses bords : c'est ce creux qui laisse
+     voir le fond au travers et donne le volume. */
+  --hv-tint: #ffffff;
+  --hv-fill-edge: 0.95;
+  --hv-fill-core: 0.34;
+  --hv-fill-foot: 0.64;
+
+  /* Liseré de contour : vif côté source de lumière (haut gauche), éteint au
+     milieu, puis rallumé en bas droite par la lumière rebondie. */
+  --hv-rim-hi: rgba(255, 255, 255, 0.98);
+  --hv-rim-mid: rgba(255, 255, 255, 0.06);
+  --hv-rim-lo: rgba(255, 255, 255, 0.6);
+
+  --hv-spec: rgba(255, 255, 255, 0.92);
+  /* saturate resterait à 190 % si l'on cherchait un verre irisé ; on le tient
+     bas pour que la marque lise blanc et non bleu acier sur le hero sombre. */
+  --hv-refract: blur(7px) saturate(112%) brightness(1.5);
+  --hv-shadow: drop-shadow(0 0.2rem 0.55rem rgba(0, 0, 0, 0.38));
+
+  position: relative;
+  display: block;
+  width: 5rem;
+  aspect-ratio: 194 / 198;
+  flex: none;
+}
+
+/* Calque 1 — réfraction. mask-mode explicite : sans lui, certains moteurs
+   lisent le SVG en luminance et la silhouette noire masquerait tout. */
+.hv-logo-refract {
+  position: absolute;
+  inset: 0;
+  -webkit-backdrop-filter: var(--hv-refract);
+  backdrop-filter: var(--hv-refract);
+  -webkit-mask-image: url(/assets/logo.svg);
+  mask-image: url(/assets/logo.svg);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  mask-mode: alpha;
+  pointer-events: none;
+}
+
+/* Sans backdrop-filter, il n'y a plus rien derrière le verre : on densifie le
+   corps du SVG pour que la marque reste lisible sur le hero noir. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .hv-logo {
+    --hv-fill-core: 0.5;
+    --hv-fill-foot: 0.76;
+  }
+}
+
+/* Calque 2 — le SVG. */
+.hv-logo-mark {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: var(--hv-shadow);
+  overflow: visible;
+}
+
+.hv-logo-mark .hv-s-edge {
+  stop-color: var(--hv-tint);
+  stop-opacity: var(--hv-fill-edge);
+}
+.hv-logo-mark .hv-s-core {
+  stop-color: var(--hv-tint);
+  stop-opacity: var(--hv-fill-core);
+}
+.hv-logo-mark .hv-s-core-2 {
+  stop-color: var(--hv-tint);
+  stop-opacity: calc(var(--hv-fill-core) + 0.1);
+}
+.hv-logo-mark .hv-s-foot {
+  stop-color: var(--hv-tint);
+  stop-opacity: var(--hv-fill-foot);
+}
+.hv-logo-mark .hv-s-rim-hi {
+  stop-color: var(--hv-rim-hi);
+}
+.hv-logo-mark .hv-s-rim-mid {
+  stop-color: var(--hv-rim-mid);
+}
+.hv-logo-mark .hv-s-rim-lo {
+  stop-color: var(--hv-rim-lo);
+}
+.hv-logo-mark .hv-s-spec {
+  stop-color: var(--hv-spec);
+}
+.hv-logo-mark .hv-s-spec-0 {
+  stop-color: var(--hv-spec);
+  stop-opacity: 0;
+}
+
+/* La bascule clair → graphite suit la même durée que l'ancien logo (.4s). */
+.hv-logo-mark stop {
+  transition: stop-color 0.4s ease, stop-opacity 0.4s ease;
+}
+
+/* Liseré : un trait épais rogné par la silhouette, donc seule sa moitié
+   interne subsiste. 9 unités sur une viewBox de 194 ≈ un cheveu à l'écran.
+   Le dégradé est référencé dans le balisage (stroke="url(#hv-logo-rim)") et
+   pas ici, pour que l'id reste local au SVG. */
+.hv-logo-rim {
+  fill: none;
+  stroke-width: 9;
+}
+
+/* En-tête passé en blanc au scroll : verre graphite, liseré resté clair pour
+   garder l'arête polie. */
+.header.on-scroll:not(.on-dark) .hv-logo {
+  --hv-tint: #0d1216;
+  --hv-fill-edge: 0.94;
+  --hv-fill-core: 0.36;
+  --hv-fill-foot: 0.62;
+  --hv-rim-hi: rgba(255, 255, 255, 0.8);
+  --hv-rim-mid: rgba(255, 255, 255, 0.04);
+  --hv-rim-lo: rgba(255, 255, 255, 0.28);
+  --hv-spec: rgba(255, 255, 255, 0.5);
+  --hv-refract: blur(5px) saturate(60%) brightness(0.92);
+  --hv-shadow: drop-shadow(0 0.15rem 0.4rem rgba(13, 18, 22, 0.22));
+}
+
+/* Nom accessible : l'ancien logo portait le mot-marque, la marque seule ne
+   dit plus rien aux lecteurs d'écran. */
+.hv-logo-name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Pas de règle par palier : le rem du thème est déjà indexé sur la largeur de
+   fenêtre (0.578vw en desktop, 2.545vw en mobile), donc 5rem tient ~47 px du
+   plus large écran au plus étroit. */
