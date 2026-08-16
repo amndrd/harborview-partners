@@ -1,0 +1,59 @@
+/* ── Barre de navigation ───────────────────────────────────────────────────
+   Le bandeau d'actualités (.related-news) qui coiffait la barre est retiré du
+   balisage. Un réglage du thème le supposait encore : .header collait à
+   top:-4.5rem, à peu près la hauteur du bandeau, de sorte qu'il s'escamotait
+   au scroll et que seule la rangée de navigation restait affichée. Sans
+   bandeau, ce décalage rognerait le haut du logo — on colle donc à 0. (La
+   réserve haute du hero, calée sur le bas du logo, est ajustée dans le bloc
+   « Hero » de index.html.)
+
+   La barre est par ailleurs élargie. Le levier n'est pas le padding du
+   conteneur — la grille du thème le force à 0 — mais --container--padding,
+   dont elle dérive sa gouttière externe :
+
+     --padding-inline: calc(var(--container--padding) - var(--container--column-gap));
+     grid-template-columns: [full-width-start] minmax(var(--padding-inline), 1fr)
+                            [content-start] … [content-end]
+                            minmax(var(--padding-inline), 1fr) [full-width-end];
+
+   Le retrait visible du logo et du bouton « Work with us » vaut donc gouttière
+   + gap, soit exactement --container--padding. On le réduit sur le seul
+   conteneur de l'en-tête, pour ne pas déplacer la grille du reste des pages.
+
+   Plancher à ne pas franchir : --container--column-gap (2rem en desktop, 2rem
+   à 991px, 1.6rem en mobile). En dessous, --padding-inline devient négatif et
+   minmax() invalide toute la grille. Le mobile est déjà à ce plancher, il
+   n'est donc pas touché. */
+
+.header {
+  top: 0;
+}
+
+.header-inner > .container {
+  --container--padding: 2.4rem; /* le thème pose 4rem, plancher 2rem */
+}
+
+@media screen and (max-width: 991px) {
+  .header-inner > .container {
+    --container--padding: 2rem; /* le thème pose 2.4rem, plancher 2rem */
+  }
+}
+
+/* Réserve haute de la barre. C'est le bandeau qui donnait son air au logo ;
+   sans lui, la marque — qui déborde de sa boîte de flux, voir logo-glass.css —
+   se retrouvait à 13 px du bord en desktop et sortait carrément de l'écran en
+   mobile. On recreuse donc la réserve.
+
+   Marge de manœuvre : .header a un plancher de hauteur (11.9rem en desktop,
+   8.6rem en mobile) que .header-inner, à 7.97rem, n'atteint pas. Tant qu'on
+   reste sous ce plancher — vérifié : ça lâche vers 60 px de padding-top en
+   desktop — la hauteur de .header ne bouge pas et le hero reste à 0. */
+.header-inner {
+  padding-top: 2.6rem; /* le thème pose 1.6rem */
+}
+
+@media screen and (max-width: 767px) {
+  .header-inner {
+    padding-top: 2.4rem; /* le thème pose 1.5rem */
+  }
+}

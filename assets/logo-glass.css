@@ -141,9 +141,13 @@
   stroke-width: 9;
 }
 
-/* En-tête passé en blanc au scroll : verre graphite, liseré resté clair pour
-   garder l'arête polie. */
-.header.on-scroll:not(.on-dark) .hv-logo {
+/* En-tête sur fond clair : verre graphite, liseré resté clair pour garder
+   l'arête polie. Le crochet est .on-dark, la classe que le thème pose lui-même
+   sur .header selon la section survolée — c'est l'équivalent du currentColor
+   dont héritait l'ancien wordmark. Ne pas le restreindre à .on-scroll : les
+   pages claires (insights, contact…) ont un en-tête clair dès le repos, et le
+   verre blanc y était illisible. */
+.header:not(.on-dark) .hv-logo {
   --hv-tint: #0d1216;
   --hv-fill-edge: 0.94;
   --hv-fill-core: 0.36;
