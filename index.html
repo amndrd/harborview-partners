@@ -236,7 +236,7 @@
       margin-top: -100vh;
     }
   }
-</style><script type="text/javascript">window.__WEBFLOW_CURRENCY_SETTINGS = {"currencyCode":"AUD","symbol":"A$","decimal":".","fractionDigits":2,"group":",","template":"{{wf {&quot;path&quot;:&quot;amount&quot;,&quot;type&quot;:&quot;CommercePrice&quot;\\} }} {{wf {&quot;path&quot;:&quot;currencyCode&quot;,&quot;type&quot;:&quot;PlainText&quot;\\} }}","hideDecimalForWholeNumbers":false};</script><link href="/assets/header.css" rel="stylesheet" type="text/css"/><link href="/assets/logo-glass.css" rel="stylesheet" type="text/css"/></head><body class="body"><div class="component-global"><div class="css-layout embed-css w-embed"><style>
+</style><script type="text/javascript">window.__WEBFLOW_CURRENCY_SETTINGS = {"currencyCode":"AUD","symbol":"A$","decimal":".","fractionDigits":2,"group":",","template":"{{wf {&quot;path&quot;:&quot;amount&quot;,&quot;type&quot;:&quot;CommercePrice&quot;\\} }} {{wf {&quot;path&quot;:&quot;currencyCode&quot;,&quot;type&quot;:&quot;PlainText&quot;\\} }}","hideDecimalForWholeNumbers":false};</script><link href="/assets/header.css" rel="stylesheet" type="text/css"/><link href="/assets/logo-glass.css" rel="stylesheet" type="text/css"/><link href="/assets/cookie-consent.css" rel="stylesheet" type="text/css"/><link href="/assets/chat-widget.css" rel="stylesheet" type="text/css"/></head><body class="body"><div class="component-global"><div class="css-layout embed-css w-embed"><style>
   html {
     font-size: 0.57870370373vw;
     height: -webkit-fill-available;
@@ -2428,4 +2428,176 @@
 <!--  -->
 
 <!-- Live -->
-<script type="module" src="/app/main.js"></script><script src="/assets/hero-title-reveal.js"></script><script src="/assets/hero-sphere.js"></script></body></html>
+<script type="module" src="/app/main.js"></script><script src="/assets/hero-title-reveal.js"></script><script src="/assets/hero-sphere.js"></script>
+  <!-- Bandeau de consentement cookies (voir initCookieConsent dans /assets/cookie-consent.js) -->
+  <div class="cookie-consent" id="cookie-consent" data-state="hidden">
+    <div class="cookie-consent-shell" id="cookie-consent-shell">
+      <button type="button" class="cookie-consent-bubble-face" id="cookie-consent-bubble-face" aria-label="Manage cookie preferences" aria-haspopup="dialog" aria-expanded="false"></button>
+
+      <img src="/assets/cookie.svg" alt="" class="cookie-consent-floating-icon" id="cookie-consent-floating-icon" aria-hidden="true" width="26" height="26" />
+
+      <div class="cookie-consent-content" id="cookie-consent-content" role="dialog" aria-modal="false" aria-label="Cookie preferences">
+      <div class="cookie-consent-view cookie-consent-view--simple" id="cookie-consent-view-simple">
+        <div class="cookie-consent-row">
+          <button type="button" class="cookie-consent-icon-btn" data-cookie-collapse aria-label="Collapse cookie banner"></button>
+          <div class="cookie-consent-actions">
+            <button type="button" class="cookie-consent-pill" id="cookie-consent-reject" data-i18n="cookieConsent.reject">Reject all</button>
+            <button type="button" class="cookie-consent-pill" id="cookie-consent-accept" data-i18n="cookieConsent.accept">Accept cookies</button>
+          </div>
+          <button type="button" class="cookie-consent-gear" id="cookie-consent-gear" aria-label="Cookie settings" aria-haspopup="dialog" aria-expanded="false">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+          </button>
+        </div>
+        <p class="cookie-consent-desc">
+          <span data-i18n="cookieConsent.descPrefix">We and our partners use cookies and other technologies to personalize your experience, measure the performance of our site, and better understand how you use it. See our</span>
+          <a href="/privacy-policy" data-i18n="cookieConsent.descLink">Cookie Policy</a>.
+        </p>
+      </div>
+
+      <div class="cookie-consent-view cookie-consent-view--settings" id="cookie-consent-view-settings" hidden>
+        <div class="cookie-consent-settings-head">
+          <h2 class="cookie-consent-title" data-i18n="cookieConsent.settingsTitle">We use cookies</h2>
+          <button type="button" class="cookie-consent-close" data-cookie-collapse aria-label="Close">&times;</button>
+        </div>
+        <p class="cookie-consent-desc">
+          <span data-i18n="cookieConsent.descPrefix">We and our partners use cookies and other technologies to personalize your experience, measure the performance of our site, and better understand how you use it. See our</span>
+          <a href="/privacy-policy" data-i18n="cookieConsent.descLink">Cookie Policy</a>.
+        </p>
+        <p class="cookie-consent-hint" data-i18n="cookieConsent.saveHint">Save your preferences to close:</p>
+
+        <div class="cookie-consent-options">
+          <p class="cookie-consent-options-title" data-i18n="cookieConsent.youAllow">You allow:</p>
+
+          <div class="cookie-consent-option">
+            <div class="cookie-consent-option-head">
+              <button
+                type="button"
+                class="cookie-consent-option-toggle"
+                data-cookie-accordion
+                aria-expanded="true"
+                aria-controls="cookie-consent-desc-necessary"
+              >
+                <span class="cookie-consent-option-icon" aria-hidden="true">−</span>
+                <span class="cookie-consent-option-name">
+                  <span data-i18n="cookieConsent.options.necessary.name">Necessary</span>
+                  <span class="cookie-consent-option-required" data-i18n="cookieConsent.options.necessary.required">Required</span>
+                </span>
+              </button>
+              <button type="button" class="cookie-consent-toggle" role="switch" aria-checked="true" disabled aria-label="Necessary cookies, always active">
+                <span class="cookie-consent-toggle-dot"></span>
+              </button>
+            </div>
+            <p class="cookie-consent-option-desc" id="cookie-consent-desc-necessary" data-i18n="cookieConsent.options.necessary.desc">
+              Necessary cookies are required to enable the basic features of this site, such as providing secure log-in or adjusting your consent preferences.
+            </p>
+          </div>
+
+          <div class="cookie-consent-option">
+            <div class="cookie-consent-option-head">
+              <button
+                type="button"
+                class="cookie-consent-option-toggle"
+                data-cookie-accordion
+                aria-expanded="false"
+                aria-controls="cookie-consent-desc-analytics"
+              >
+                <span class="cookie-consent-option-icon" aria-hidden="true">+</span>
+                <span class="cookie-consent-option-name" data-i18n="cookieConsent.options.analytics.name">Performance &amp; analytics</span>
+              </button>
+              <button type="button" class="cookie-consent-toggle" id="cookie-consent-toggle-analytics" role="switch" aria-checked="false" aria-label="Allow performance and analytics cookies">
+                <span class="cookie-consent-toggle-dot"></span>
+              </button>
+            </div>
+            <p class="cookie-consent-option-desc" id="cookie-consent-desc-analytics" data-i18n="cookieConsent.options.analytics.desc" hidden>
+              Performance and Analytics cookies allow us to count visits and traffic sources so we can measure and improve the performance of our site. They help us know which pages are the most and least popular and see how visitors move around the site.
+            </p>
+          </div>
+
+          <div class="cookie-consent-option">
+            <div class="cookie-consent-option-head">
+              <button
+                type="button"
+                class="cookie-consent-option-toggle"
+                data-cookie-accordion
+                aria-expanded="false"
+                aria-controls="cookie-consent-desc-marketing"
+              >
+                <span class="cookie-consent-option-icon" aria-hidden="true">+</span>
+                <span class="cookie-consent-option-name" data-i18n="cookieConsent.options.marketing.name">Marketing &amp; Advertising</span>
+              </button>
+              <button type="button" class="cookie-consent-toggle" id="cookie-consent-toggle-marketing" role="switch" aria-checked="false" aria-label="Allow marketing and advertising cookies">
+                <span class="cookie-consent-toggle-dot"></span>
+              </button>
+            </div>
+            <p class="cookie-consent-option-desc" id="cookie-consent-desc-marketing" data-i18n="cookieConsent.options.marketing.desc" hidden>
+              Advertisement &amp; Marketing cookies are set by us and our advertising partners to build a profile of your interests and deliver you with customized advertisements based on the pages you have visited before. These cookies are also used to analyze the effectiveness of the marketing campaigns.
+            </p>
+          </div>
+        </div>
+
+        <div class="cookie-consent-row cookie-consent-row--footer">
+          <button type="button" class="cookie-consent-icon-btn" data-cookie-collapse aria-label="Collapse cookie banner"></button>
+          <button type="button" class="cookie-consent-pill" id="cookie-consent-accept-settings" data-i18n="cookieConsent.accept">Accept cookies</button>
+          <button type="button" class="cookie-consent-pill" id="cookie-consent-save" data-i18n="cookieConsent.save">Save preferences</button>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div class="cookie-consent-feedback-badge" id="cookie-consent-feedback-badge" aria-hidden="true">
+      <svg class="cookie-consent-feedback-badge-icon cookie-consent-feedback-badge-icon--accept" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+      <svg class="cookie-consent-feedback-badge-icon cookie-consent-feedback-badge-icon--reject" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    </div>
+  </div>
+
+
+  <!-- Widget de chat (voir initChatWidget dans /assets/chat-widget.js) -->
+  <div class="chat-widget" id="chat-widget" data-state="hidden">
+    <div class="chat-widget-shell" id="chat-widget-shell">
+      <div class="chat-widget-panel" id="chat-widget-panel" role="dialog" aria-label="Chat with the Harborview assistant" aria-hidden="true">
+        <div class="chat-widget-head">
+          <div class="chat-widget-title">
+            Harborview assistant
+            <span class="chat-widget-status" id="chat-widget-status" data-idle="Ask about shipping, customs or freight">Ask about shipping, customs or freight</span>
+          </div>
+          <button type="button" class="chat-widget-close" id="chat-widget-close" aria-label="Close chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="chat-widget-log" id="chat-widget-log" role="log" aria-live="polite" aria-relevant="additions"></div>
+
+        <form class="chat-widget-composer" id="chat-widget-form">
+          <textarea class="chat-widget-input" id="chat-widget-input" rows="1" maxlength="2000" placeholder="Type your message&hellip;" aria-label="Message"></textarea>
+          <button type="submit" class="chat-widget-send" id="chat-widget-send" aria-label="Send message">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="4" y1="12" x2="19" y2="12" /><polyline points="13 6 19 12 13 18" />
+            </svg>
+          </button>
+        </form>
+
+        <p class="chat-widget-legal">AI assistant &mdash; answers may be inaccurate and are not a quote or a booking confirmation.</p>
+      </div>
+
+      <button type="button" class="chat-widget-bubble-face" id="chat-widget-bubble-face" aria-label="Open chat" aria-haspopup="dialog" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+        </svg>
+        <span class="chat-widget-unread" aria-hidden="true"></span>
+      </button>
+    </div>
+  </div>
+
+<script src="/assets/cookie-consent.js" defer></script>
+<script src="/assets/chat-widget.js" defer></script>
+</body></html>

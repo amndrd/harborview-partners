@@ -191,6 +191,62 @@ Un serveur est **nécessaire** (pas d'ouverture en `file://`) : le site utilise 
 modules ES, des transitions de page Barba.js qui récupèrent les pages en XHR, et
 des chemins absolus depuis la racine.
 
+## Chatbot
+
+Badge en bas à droite qui s'ouvre en carte de discussion, sur les 40 pages.
+Répond en streaming via l'API Claude (modèle `claude-haiku-4-5`).
+
+```bash
+ANTHROPIC_API_KEY=sk-ant-... node serve.mjs
+```
+
+Sans la variable, le site fonctionne normalement et le chatbot répond
+« The assistant is not configured yet. » — rien d'autre ne casse.
+
+**La clé ne doit jamais toucher le navigateur.** Elle serait lisible dans les
+sources par n'importe quel visiteur, et utilisable à volonté à vos frais. Le
+widget appelle donc `/api/chat` sur votre propre domaine ; ce point de
+terminaison seul détient la clé et relaie vers Anthropic.
+
+| Fichier | Rôle |
+|---------|------|
+| `api/_lib/persona.mjs` | **Le seul fichier à éditer** : modèle, prompt système, faits sur l'entreprise, plafonds. |
+| `api/_lib/chat-core.mjs` | Relais vers l'API Claude, validation des entrées, limite de débit, transformation du flux SSE. |
+| `api/chat.mjs` | Point d'entrée serverless (Vercel/Netlify). |
+| `netlify/functions/chat.mjs` | Renvoi vers le précédent, pour la convention de dossier de Netlify. |
+| `assets/chat-widget.css` / `.js` | Le badge et la carte. Le message d'accueil est la constante `GREETING` en tête du `.js`. |
+| `serve.mjs` | Sert `/api/chat` en développement, avec la même logique. |
+
+Le préfixe `_` de `api/_lib` n'est pas décoratif : Vercel transforme en route
+HTTP chaque fichier de `/api` sauf ceux dont le nom commence par un souligné.
+`serve.mjs` et `netlify.toml` refusent en plus de servir `/api/**` en statique,
+sans quoi le prompt système serait téléchargeable.
+
+**Adapter les réponses** — tout est dans `api/_lib/persona.mjs` :
+
+- `CHAT_CONFIG.model` : `claude-haiku-4-5` (1 $/5 $ par million de tokens),
+  `claude-sonnet-5` (3 $/15 $) ou `claude-opus-5` (5 $/25 $).
+- `COMPANY_FACTS` : les faits sur l'entreprise. Les lignes « À COMPLÉTER » sont
+  traitées comme inconnues — l'assistant renvoie vers `/contact` au lieu
+  d'inventer un bureau ou une prestation. **C'est ce bloc qu'il reste à
+  remplir** quand le contenu définitif du site sera arrêté.
+- `buildSystemPrompt()` : le ton, le périmètre et les interdits (jamais de prix
+  ni de délai ferme, pas de conseil juridique ou douanier, hors-sujet refusé).
+
+**Déployer** — un seul réglage dans les deux cas : la variable d'environnement
+`ANTHROPIC_API_KEY`.
+
+| Plateforme | Ce qui est déjà en place | Ce qu'il reste à faire |
+|------------|--------------------------|------------------------|
+| Vercel | `vercel.json`, `api/chat.mjs` exposé sur `/api/chat` | Ajouter `ANTHROPIC_API_KEY` dans Settings → Environment Variables |
+| Netlify | `netlify.toml` (redirection `/api/chat`, blocage du reste) | Ajouter `ANTHROPIC_API_KEY` dans Site settings → Environment variables |
+
+**Garde-fous** — le point de terminaison est public : 2 000 caractères par
+message, 24 messages d'historique, 1 024 tokens par réponse, 20 requêtes par
+minute et par IP. Ce dernier compteur vit en mémoire : il protège un serveur
+unique, mais en serverless chaque instance a la sienne — pour un vrai plafond,
+utilisez celui de la plateforme (Vercel Firewall, Netlify rate limiting).
+
 ## Ce que contient la copie
 
 | Dossier    | Contenu |

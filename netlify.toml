@@ -1,0 +1,32 @@
+# Déploiement Netlify — site statique + la fonction du chatbot.
+# La clé se règle dans Site settings → Environment variables : ANTHROPIC_API_KEY.
+
+[build]
+  publish = "."
+  # Rien à construire : le site est déjà du HTML statique.
+  command = ""
+
+# Le widget appelle /api/chat ; Netlify sert les fonctions sous
+# /.netlify/functions/. Cette redirection fait le pont, pour que le même code
+# front marche en local (serve.mjs), sur Vercel et sur Netlify.
+[[redirects]]
+  from = "/api/chat"
+  to = "/.netlify/functions/chat"
+  status = 200
+  force = true
+
+# publish = "." publie le dépôt entier : sans cette règle, le code du relais
+# et surtout le prompt système (api/_lib/persona.mjs) seraient téléchargeables
+# par n'importe qui. La règle vient après celle du dessus, qui garde donc
+# /api/chat fonctionnel.
+[[redirects]]
+  from = "/api/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/netlify/*"
+  to = "/404.html"
+  status = 404
+  force = true

@@ -1,0 +1,474 @@
+/* ============================================================================
+   WIDGET DE CHAT — badge en bas à DROITE, symétrique du badge cookies
+
+   Même mécanique que le bandeau de consentement (voir cookie-consent.css) :
+   UNE seule forme, .chat-widget-shell, dont width/height/border-radius sont
+   transitionnés. Le panneau à l'intérieur est TOUJOURS rendu à sa taille et sa
+   position finales, ancré en bas à droite : il ne se redessine jamais pendant
+   l'ouverture — c'est la coquille (overflow: hidden) qui le révèle comme un
+   rideau. Sans cela, le texte se reflowerait à chaque image de l'animation.
+
+   Toutes les tailles sont en px, jamais en rem : la racine de ce site a un
+   font-size FLUIDE (8.33px à 1440px de large), donc des rem feraient changer
+   le widget de taille avec la fenêtre. Même raison, même solution que dans
+   cookie-consent.css.
+   ========================================================================= */
+
+/* ---------- Tokens et reset, portés par le seul widget ------------------- */
+
+.chat-widget {
+  --color-bg: #fdfbf7;
+  --color-text: #14120f;
+  --font-sans: var(--font--body, "Helvetica Neue", Arial, sans-serif);
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 600ms;
+
+  --chat-w: min(384px, calc(100vw - 44px));
+  --chat-h: min(560px, calc(100vh - 132px));
+
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+/* Équivalent local d'un reset : Webflow applique des marges aux <p>, un
+   padding et une bordure aux <button>, et une apparence propre aux
+   <textarea> que ce fichier doit neutraliser. Ancêtre en :where() pour que
+   la spécificité reste celle du sélecteur d'élément nu — assez pour battre
+   les règles d'élément de Webflow (ce fichier est chargé après), trop peu
+   pour écraser les classes ci-dessous. */
+:where(.chat-widget) *,
+:where(.chat-widget) *::before,
+:where(.chat-widget) *::after {
+  box-sizing: border-box;
+}
+
+:where(.chat-widget) p,
+:where(.chat-widget) h1,
+:where(.chat-widget) h2,
+:where(.chat-widget) h3 {
+  margin: 0;
+}
+
+:where(.chat-widget) button {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+:where(.chat-widget) textarea {
+  margin: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  color: inherit;
+  resize: none;
+  outline: none;
+}
+
+/* ---------- Conteneur ---------------------------------------------------- */
+
+.chat-widget {
+  position: fixed;
+  right: 22.5px;
+  bottom: 22.5px;
+  z-index: 600;
+  font-family: var(--font-sans);
+  transition: transform var(--duration-normal) var(--ease-soft),
+    opacity var(--duration-normal) var(--ease-soft);
+}
+
+/* ---------- Coquille ----------------------------------------------------- */
+
+.chat-widget-shell {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-text);
+  box-shadow: 0 10px 30px rgba(20, 18, 15, 0.35);
+  width: 61.2px;
+  height: 61.2px;
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0.6);
+  transform-origin: bottom right;
+  /* opacity/transform : uniquement pour la toute première apparition. Une
+     fois montrée, la coquille ne change plus jamais d'opacité ni d'échelle
+     en passant de bulle à carte — seules width/height/border-radius bougent. */
+  transition: opacity var(--duration-normal) var(--ease-soft),
+    transform var(--duration-normal) var(--ease-soft),
+    width var(--duration-slow) var(--ease-soft),
+    height var(--duration-slow) var(--ease-soft),
+    border-radius var(--duration-slow) var(--ease-soft),
+    box-shadow var(--duration-slow) var(--ease-soft);
+}
+
+.chat-widget:not([data-state="hidden"]) .chat-widget-shell {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.chat-widget[data-state="open"] .chat-widget-shell {
+  width: var(--chat-w);
+  height: var(--chat-h);
+  border-radius: 19.8px;
+  box-shadow: 0 24px 60px rgba(20, 18, 15, 0.35);
+}
+
+/* ---------- Bulle : cible de clic et icône ------------------------------- */
+
+/* Cercle toujours à la taille et à la position exactes de l'état bulle,
+   ancré en bas à droite comme la coquille. z-index : le panneau occupe le
+   même coin et déborderait par-dessus, volant les clics destinés à la bulle. */
+.chat-widget-bubble-face {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 61.2px;
+  height: 61.2px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-bg);
+  z-index: 3;
+  transition: opacity var(--duration-fast) var(--ease-soft);
+}
+
+.chat-widget[data-state="open"] .chat-widget-bubble-face {
+  /* Hors état bulle, le bouton ne doit ni intercepter les clics destinés au
+     panneau, ni rester un arrêt de tabulation fantôme (voir aussi
+     bubbleFace.tabIndex dans chat-widget.js). */
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chat-widget-bubble-face svg {
+  width: 25px;
+  height: 25px;
+}
+
+/* Pastille de notification sur la bulle quand une réponse est arrivée
+   pendant que la carte était refermée. */
+.chat-widget-unread {
+  position: absolute;
+  top: 13px;
+  right: 13px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #30a46c;
+  opacity: 0;
+  transform: scale(0.4);
+  transition: opacity var(--duration-fast) var(--ease-soft),
+    transform var(--duration-fast) var(--ease-soft);
+}
+
+.chat-widget.has-unread[data-state="bubble"] .chat-widget-unread {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ---------- Panneau ------------------------------------------------------ */
+
+/* Ancré en bas à droite et déjà à sa taille finale, exactement comme la
+   coquille : la carte ne bouge donc pas d'un pixel pendant l'ouverture. */
+.chat-widget-panel {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: var(--chat-w);
+  height: var(--chat-h);
+  display: flex;
+  flex-direction: column;
+  color: var(--color-bg);
+}
+
+/* Le panneau est rendu en permanence (c'est ce qui rend l'ouverture fluide),
+   mais tant que la carte est fermée il ne doit être ni cliquable, ni lu par
+   les lecteurs d'écran, ni atteignable au clavier. */
+.chat-widget:not([data-state="open"]) .chat-widget-panel {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity var(--duration-fast) var(--ease-soft),
+    visibility 0s linear var(--duration-fast);
+}
+
+.chat-widget[data-state="open"] .chat-widget-panel {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--duration-normal) var(--ease-soft) 120ms;
+}
+
+.chat-widget-head {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 16px 14px 20px;
+  border-bottom: 1px solid rgba(253, 251, 247, 0.1);
+}
+
+.chat-widget-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.chat-widget-status {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 400;
+  color: rgba(253, 251, 247, 0.55);
+}
+
+.chat-widget-close {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(253, 251, 247, 0.08);
+  color: var(--color-bg);
+  transition: background var(--duration-fast) var(--ease-soft);
+}
+
+.chat-widget-close:hover {
+  background: rgba(253, 251, 247, 0.18);
+}
+
+.chat-widget-close svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ---------- Fil de messages ---------------------------------------------- */
+
+.chat-widget-log {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(253, 251, 247, 0.25) transparent;
+}
+
+/* Colle les messages en bas de la carte tant qu'ils ne remplissent pas la
+   hauteur. `margin-top: auto` sur un pseudo-élément plutôt que
+   justify-content: flex-end sur le conteneur : ce dernier rogne le haut du
+   contenu dès qu'il déborde, dans un conteneur défilant. */
+.chat-widget-log::before {
+  content: "";
+  margin-top: auto;
+}
+
+.chat-widget-log::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-widget-log::-webkit-scrollbar-thumb {
+  background: rgba(253, 251, 247, 0.22);
+  border-radius: 3px;
+}
+
+.chat-widget-msg {
+  max-width: 86%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.chat-widget-msg--bot {
+  align-self: flex-start;
+  background: rgba(253, 251, 247, 0.08);
+  border-bottom-left-radius: 5px;
+}
+
+.chat-widget-msg--user {
+  align-self: flex-end;
+  background: var(--color-bg);
+  color: var(--color-text);
+  border-bottom-right-radius: 5px;
+}
+
+.chat-widget-msg--error {
+  align-self: flex-start;
+  background: rgba(229, 72, 77, 0.16);
+  color: #ffb3b5;
+  border-bottom-left-radius: 5px;
+}
+
+/* Trois points pendant l'attente du premier mot de la réponse. */
+.chat-widget-typing {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 14px;
+}
+
+.chat-widget-typing span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(253, 251, 247, 0.55);
+  animation: chat-widget-bounce 1.2s var(--ease-soft) infinite;
+}
+
+.chat-widget-typing span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.chat-widget-typing span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes chat-widget-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* ---------- Zone de saisie ----------------------------------------------- */
+
+.chat-widget-composer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 12px 14px 14px 20px;
+  border-top: 1px solid rgba(253, 251, 247, 0.1);
+}
+
+/* Les neutralisations (bordure, poignée de redimensionnement, apparence
+   native) sont portées par la CLASSE, pas par le reset en :where() plus haut.
+   Raison : ce site embarque des <style> dans le corps de page, donc APRÈS ce
+   fichier — leurs règles d'élément (textarea{resize:vertical}) gagnent les
+   égalités de spécificité contre :where(.chat-widget) textarea, toutes deux
+   en (0,0,1). Une classe, elle, l'emporte quel que soit l'ordre de source. */
+.chat-widget-input {
+  flex: 1;
+  min-width: 0;
+  /* max-height = 4 lignes environ : au-delà, la zone défile au lieu de
+     manger la hauteur du fil de messages (voir autoGrow dans le JS). */
+  max-height: 96px;
+  padding: 8px 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--color-bg);
+  overflow-y: auto;
+  resize: none;
+  appearance: none;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  box-shadow: none;
+  background: none;
+}
+
+.chat-widget-input::placeholder {
+  color: rgba(253, 251, 247, 0.4);
+}
+
+.chat-widget-send {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  transition: transform var(--duration-fast) var(--ease-soft),
+    opacity var(--duration-fast) var(--ease-soft);
+}
+
+.chat-widget-send:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.chat-widget-send:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.chat-widget-send svg {
+  width: 16px;
+  height: 16px;
+}
+
+.chat-widget-legal {
+  flex-shrink: 0;
+  padding: 0 20px 12px;
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: rgba(253, 251, 247, 0.4);
+}
+
+/* Anneau de focus visible sur fond sombre, seulement au clavier. La zone de
+   saisie en est exclue : le curseur y signale déjà le focus, et comme la carte
+   lui donne le focus par programme à l'ouverture, Chromium l'entourerait d'un
+   cadre permanent qui la ferait ressembler à un champ de formulaire. */
+.chat-widget :focus-visible:not(.chat-widget-input) {
+  outline: 2px solid rgba(253, 251, 247, 0.65);
+  outline-offset: 2px;
+}
+
+/* ---------- Cohabitation avec le bandeau cookies ------------------------- */
+
+/* Sur téléphone, le bandeau cookies occupe presque toute la largeur en bas
+   de l'écran et passerait sous la bulle du chat. Le sélecteur de frère
+   fonctionne parce que le widget de chat est inséré APRÈS #cookie-consent
+   dans le HTML : aucun JavaScript n'a besoin de faire le lien. */
+@media (max-width: 640px) {
+  .chat-widget {
+    --chat-w: calc(100vw - 32px);
+    --chat-h: min(560px, calc(100vh - 108px));
+    right: 16px;
+    bottom: 16px;
+  }
+
+  /* Tant que le bandeau est déplié, la bulle du chat s'efface plutôt que de
+     se poser dessus. Un simple décalage vertical ne marcherait pas : la
+     hauteur du bandeau dépend de son contenu et de la langue (voir
+     updateShellHeight dans cookie-consent.js et la règle html[lang="fr"] de
+     cookie-consent.css), donc toute valeur fixe serait fausse quelque part.
+     La bulle revient dès que le visiteur a répondu au bandeau ou l'a replié
+     — sur mobile, une tape en dehors suffit. */
+  #cookie-consent[data-state="banner"] ~ .chat-widget[data-state="bubble"],
+  #cookie-consent[data-state="settings"] ~ .chat-widget[data-state="bubble"] {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-widget,
+  .chat-widget-shell,
+  .chat-widget-panel,
+  .chat-widget-send,
+  .chat-widget-unread {
+    transition-duration: 1ms;
+  }
+
+  .chat-widget-typing span {
+    animation: none;
+  }
+}

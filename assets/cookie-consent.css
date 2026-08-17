@@ -1,0 +1,700 @@
+/* ============================================================================
+   BANDEAU DE CONSENTEMENT COOKIES — repris tel quel du site Meridian
+   (css/components.css, lignes 880-1483).
+
+   Le bloc « Adaptation Harborview » ci-dessous est le SEUL ajout : il
+   redéclare, à la portée du seul widget, les tokens de design et le reset de
+   base que Meridian définissait globalement (css/variables.css + css/base.css)
+   et que ce site n'a pas. Sans lui les var(--color-text), var(--ease-soft)...
+   ne résoudraient pas et les styles Webflow (marges de <p>/<h2>, padding des
+   <button>) déformeraient le widget. Tout le reste du fichier est identique
+   au fichier source, commentaires compris.
+   ========================================================================= */
+
+/* ---------- Adaptation Harborview : tokens + reset, portée au widget ------ */
+
+.cookie-consent {
+  /* Valeurs exactes de Meridian/css/variables.css. --font-sans est la seule
+     à être remappée : sur la police du site (Helvetica Neue) plutôt que sur
+     Manrope, qui n'est pas chargée ici. */
+  --color-bg: #fdfbf7;
+  --color-text: #14120f;
+  --font-sans: var(--font--body, "Helvetica Neue", Arial, sans-serif);
+  --radius-pill: 999px;
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 600ms;
+
+  /* Meridian pose :root{font-size:112.5%} (18px) et écrit tout le widget en
+     rem. Ce site a au contraire une racine FLUIDE (8.33px à 1440px de large,
+     11.11px à 1920px) : les mêmes rem y affichaient le widget à ~46% de sa
+     taille, et le faisaient changer de taille avec la fenêtre. Les rem de la
+     copie ci-dessous ont donc tous été convertis en px à la valeur d'origine
+     (×18) — le rendu est celui de Meridian, à l'identique et à toute largeur.
+     Ce font-size fait de même pour le texte qui n'en déclare pas lui-même. */
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+/* Équivalent local de Meridian/css/base.css : Webflow applique des marges aux
+   <p>/<h2> et un padding/bordure aux <button> que le CSS d'origine, écrit
+   par-dessus un reset, ne neutralise jamais lui-même.
+
+   Seul l'ancêtre passe par :where() : la spécificité de chaque règle est donc
+   celle de son sélecteur d'élément nu, (0,0,1). C'est la seule valeur juste,
+   prise en étau entre deux contraintes :
+     - il faut battre les règles d'élément de Webflow (p{margin-bottom:10px},
+       les styles de <button>...), elles aussi en (0,0,1) — d'où la victoire
+       par ordre de source, ce fichier étant chargé en dernier ;
+     - il faut perdre face aux classes de la copie exacte ci-dessous, en
+       (0,1,0), qui doivent rester maîtresses du rendu.
+   Les deux excès ont été observés : en (0,1,1) (".cookie-consent button")
+   ces règles écrasaient .cookie-consent-pill et vidaient les boutons
+   Reject/Accept de leur fond, invisibles sur la coquille noire ; en (0,0,0)
+   (tout dans :where()) c'est Webflow qui repassait devant et rajoutait
+   10px sous chaque <p>, décentrant le contenu de la carte. */
+:where(.cookie-consent) *,
+:where(.cookie-consent) *::before,
+:where(.cookie-consent) *::after {
+  box-sizing: border-box;
+}
+
+:where(.cookie-consent) p,
+:where(.cookie-consent) h1,
+:where(.cookie-consent) h2,
+:where(.cookie-consent) h3,
+:where(.cookie-consent) h4 {
+  margin: 0;
+}
+
+:where(.cookie-consent) button {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+:where(.cookie-consent) a {
+  color: inherit;
+  text-decoration: none;
+}
+
+:where(.cookie-consent) img {
+  max-width: 100%;
+  display: block;
+}
+
+/* ---------- Fin de l'adaptation — copie exacte de Meridian ci-dessous ----- */
+
+/* ---------- Bandeau de consentement cookies (voir initCookieConsent dans
+   main.js) : UNE seule forme (.cookie-consent-shell) dont width/height/
+   border-radius sont transitionnés directement.
+   .cookie-consent-content est TOUJOURS affiché, à sa taille et sa position
+   FINALES instantanément (largeur pilotée par --cc-w, jamais transitionnée ;
+   ancré en bas-gauche, comme la coquille elle-même) : il ne bouge et ne se
+   redessine JAMAIS pendant que la coquille grandit/rétrécit — c'est le
+   redimensionnement réel de la coquille (overflow:hidden) qui le révèle ou
+   le masque, comme un rideau. Le pied du panneau réglages (boutons
+   Accept/Save) profite du même ancrage bas : il reste visuellement fixe
+   quand on ouvre une des 3 options et que la coquille grandit pour
+   accommoder la description supplémentaire (voir updateShellHeight
+   dans cookie-consent.js) — seul le HAUT du panneau s'ajuste.
+   L'icône du cookie est une seule image flottante (.cookie-consent-
+   floating-icon), toujours visible, qui se DÉPLACE (transform: translate,
+   transitionné en même temps que la coquille) entre trois positions —
+   centrée dans la bulle, dans la rangée du bandeau, dans le pied du panneau
+   réglages — au lieu d'être dupliquée/masquée à chaque état (voir
+   moveFloatingIconTo dans main.js). Les boutons "fantômes" à ces trois
+   emplacements (bubbleFace, icon-btn des deux vues) restent les vraies
+   cibles cliquables/accessibles ; l'icône flottante n'est que visuelle. */
+
+.cookie-consent {
+  position: fixed;
+  left: 22.5px;
+  bottom: 22.5px;
+  z-index: 600;
+  font-family: var(--font-sans);
+  transition: opacity var(--duration-normal) var(--ease-soft);
+}
+
+/* Une fois le choix confirmé (voir showFeedbackBadge dans main.js), tout le
+   widget (bulle + badge de confirmation) s'efface en fondu en même temps que
+   le badge, au lieu de laisser la bulle cookie seule derrière. */
+.cookie-consent.is-dismissed {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cookie-consent-shell {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-text);
+  box-shadow: 0 10px 30px rgba(20, 18, 15, 0.35);
+  width: 61.2px;
+  height: 61.2px;
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0.6);
+  transform-origin: bottom left;
+  /* opacity/transform : seulement pour la toute première apparition (voir
+     [data-state="hidden"] ci-dessous) — une fois montrée, la coquille ne
+     change plus jamais d'opacité ni d'échelle en passant entre bulle,
+     bandeau et réglages : seules width/height/border-radius bougent. */
+  transition: opacity var(--duration-normal) var(--ease-soft),
+    transform var(--duration-normal) var(--ease-soft),
+    width var(--duration-slow) var(--ease-soft),
+    height var(--duration-slow) var(--ease-soft),
+    border-radius var(--duration-slow) var(--ease-soft),
+    box-shadow var(--duration-slow) var(--ease-soft);
+}
+
+.cookie-consent:not([data-state="hidden"]) .cookie-consent-shell {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.cookie-consent[data-state="banner"] .cookie-consent-shell,
+.cookie-consent[data-state="settings"] .cookie-consent-shell {
+  border-radius: 19.8px;
+  box-shadow: 0 24px 60px rgba(20, 18, 15, 0.35);
+}
+
+/* --cc-w : largeur cible de la coquille pour l'état courant, déclarée sur
+   le conteneur .cookie-consent[data-state] pour qu'elle descende à la fois
+   à .cookie-consent-shell (transitionnée) ET .cookie-consent-content (non
+   transitionnée, snap instantané) — une seule valeur par état/langue,
+   jamais deux nombres à maintenir en double.
+   Largeur du bandeau simple = juste assez pour que l'icône, Reject/Accept
+   et l'engrenage tiennent avec leurs espacements naturels, symétrique des
+   deux côtés (voir padding de .cookie-consent-content) — pas la largeur,
+   plus grande, du panneau réglages (dictée par "Save preferences"). */
+.cookie-consent[data-state="banner"] {
+  --cc-w: min(370.8px, calc(100vw - 45px));
+}
+
+.cookie-consent[data-state="settings"] {
+  --cc-w: min(441px, calc(100vw - 45px));
+}
+
+.cookie-consent[data-state="banner"] .cookie-consent-shell,
+.cookie-consent[data-state="settings"] .cookie-consent-shell {
+  width: var(--cc-w);
+}
+
+/* 144px : comme les 516.6px du panneau réglages ci-dessous, ce n'est plus
+   qu'une valeur de repli — updateShellHeight (cookie-consent.js) fixe ensuite
+   la hauteur réelle du contenu. Chez Meridian cette valeur était au contraire
+   définitive, taillée pour Manrope ; en Helvetica Neue la description dépasse
+   et se faisait rogner par le haut (voir updateShellHeight pour le détail). */
+.cookie-consent[data-state="banner"] .cookie-consent-shell {
+  height: 144px;
+}
+
+/* 516.6px : valeur de repli utilisée le temps du tout premier rendu ;
+   ensuite ajustée dynamiquement en pixels par updateShellHeight
+   (cookie-consent.js) selon l'option d'accordéon actuellement dépliée — c'est
+   ce qui permet au bas du panneau (Accept/Save) de rester fixe pendant que le
+   haut s'agrandit ou se réduit. */
+.cookie-consent[data-state="settings"] .cookie-consent-shell {
+  height: 516.6px;
+}
+
+.cookie-consent-bubble-face {
+  /* Cercle toujours à la taille/position exactes de l'état bulle, ancré
+     bas-gauche comme la coquille — jamais redimensionné selon l'état
+     courant, pour rester mesurable à tout instant par moveFloatingIconTo
+     (main.js), y compris pendant que la coquille est encore une bulle
+     mais que le bandeau/panneau réglages commence tout juste à grandir.
+     z-index : .cookie-consent-content (ancré au même coin bas-gauche,
+     toujours pleinement rendu, voir plus bas) déborde forcément par-dessus
+     ce coin en bulle — sans z-index ici, son dernier enfant (ex. la fin du
+     texte de description) passerait devant et volerait les clics destinés
+     à la bulle. Sans incidence en bandeau/réglages, où pointer-events:none
+     (juste en dessous) retire de toute façon bubbleFace du hit-test. */
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 61.2px;
+  height: 61.2px;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  color: inherit;
+  z-index: 3;
+}
+
+.cookie-consent[data-state="banner"] .cookie-consent-bubble-face,
+.cookie-consent[data-state="settings"] .cookie-consent-bubble-face,
+.cookie-consent[data-state="hidden"] .cookie-consent-bubble-face {
+  /* Toujours présent dans le DOM (mesurable), mais hors bulle il ne doit
+     ni intercepter les clics destinés au contenu, ni rester un arrêt de
+     tabulation fantôme (voir aussi bubbleFace.tabIndex dans main.js).
+     "hidden" est l'état initial très bref avant que le JS ne bascule sur
+     "bubble" au premier chargement (voir data-state="hidden" dans le
+     HTML) : ce pointer-events:none évite tout clic fantôme entre-temps. */
+  pointer-events: none;
+}
+
+/* Le temps que le badge de confirmation (✓/✕) reste affiché après un choix
+   Accepter/Refuser (voir showFeedbackBadge dans main.js), la bulle ignore
+   le survol/clic : sans ça, passer le curseur dessus pendant cette fenêtre
+   relance expandToBanner et rouvre le bandeau juste après avoir répondu. */
+.cookie-consent.is-confirming .cookie-consent-bubble-face {
+  pointer-events: none;
+}
+
+.cookie-consent-floating-icon {
+  /* Position de base = centre exact du cercle bulle ci-dessus
+     ((61.2px - 28.8px) / 2 = 16.2px) ; main.js la déplace ensuite vers le
+     bon "ancrage" (bulle / icon-btn du bandeau / icon-btn du panneau
+     réglages) via transform: translate(), qui profite de la transition
+     ci-dessous pour glisser en même temps que la coquille change de forme. */
+  position: absolute;
+  left: 16.2px;
+  bottom: 16.2px;
+  width: 28.8px;
+  height: 28.8px;
+  pointer-events: none;
+  z-index: 2;
+  transition: transform var(--duration-slow) var(--ease-soft);
+}
+
+/* Badge de confirmation (voir showFeedbackBadge dans main.js) : posé en
+   dehors de .cookie-consent-shell (qui a overflow:hidden + border-radius
+   circulaire en bulle) pour ne jamais être rogné par ce masque. Positionné
+   en rem fixes depuis le coin bas-gauche de .cookie-consent — ce coin ne
+   bouge jamais (transform-origin de la coquille), donc ces valeurs pointent
+   toujours en haut à droite de la bulle (61.2px × 61.2px), quelle que soit
+   la taille courante de la coquille au moment de l'appel. Volontairement
+   décalé pour chevaucher le bord de la bulle (à la manière d'un badge de
+   notification posé sur une icône), au lieu de flotter à côté. */
+.cookie-consent-feedback-badge {
+  position: absolute;
+  left: 38.7px;
+  bottom: 38.7px;
+  width: 23.4px;
+  height: 23.4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fdfbf7;
+  box-shadow: 0 6px 16px rgba(20, 18, 15, 0.4);
+  opacity: 0;
+  transform: scale(0.5);
+  pointer-events: none;
+  z-index: 10;
+  transition: opacity var(--duration-normal) var(--ease-soft),
+    transform var(--duration-normal) var(--ease-soft);
+}
+
+.cookie-consent-feedback-badge.is-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.cookie-consent-feedback-badge--accept {
+  background: #3f8f5c;
+}
+
+.cookie-consent-feedback-badge--reject {
+  background: #c1483a;
+}
+
+.cookie-consent-feedback-badge-icon {
+  display: none;
+}
+
+.cookie-consent-feedback-badge--accept .cookie-consent-feedback-badge-icon--accept,
+.cookie-consent-feedback-badge--reject .cookie-consent-feedback-badge-icon--reject {
+  display: block;
+}
+
+.cookie-consent-content {
+  /* Ancré bas-gauche comme la coquille : sa taille/position ne dépendent
+     JAMAIS de la taille courante (en cours de transition) de la coquille
+     qui l'entoure — width vient de --cc-w (snap instantané, pas de
+     transition), donc le texte ne se redessine jamais pendant que la
+     coquille grandit/rétrécit, elle ne fait que le révéler/masquer. */
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: var(--cc-w, min(370.8px, calc(100vw - 45px)));
+  padding: 18.9px 22.5px 18.9px;
+  color: var(--color-bg);
+}
+
+/* En bulle, .cookie-consent-content garde sa taille bandeau/réglages
+   (ancrage bas-gauche partagé avec bubbleFace, voir plus haut) : sans
+   cette règle, la fin du texte de description — son dernier enfant,
+   donc le plus proche du coin bas-gauche — se retrouverait à cheval sur
+   le petit cercle de la bulle. visibility (jamais display:none, pour ne
+   perturber ni le layout ni les mesures de moveFloatingIconTo) bascule
+   INSTANTANÉMENT avec data-state, sans transition : le contenu est déjà
+   visible dès la toute première frame où la coquille commence à grandir,
+   ce qui préserve l'effet "rideau" pendant la transition bulle -> bandeau. */
+.cookie-consent[data-state="hidden"] .cookie-consent-content,
+.cookie-consent[data-state="bubble"] .cookie-consent-content {
+  visibility: hidden;
+}
+
+.cookie-consent-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 9px;
+}
+
+/* Bouton "fantôme" (aucun contenu visuel propre) : réserve exactement la
+   taille/position naturelle qu'occuperait l'icône dans la rangée — c'est
+   là que .cookie-consent-floating-icon vient se superposer visuellement
+   (voir moveFloatingIconTo dans main.js) — et reste la vraie cible
+   cliquable/accessible ("Réduire le bandeau cookies"). */
+.cookie-consent-icon-btn {
+  flex-shrink: 0;
+  width: 28.8px;
+  height: 28.8px;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.cookie-consent-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 7.2px;
+  min-width: 0;
+}
+
+.cookie-consent-pill {
+  padding: 9px 14.4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 14.04px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* Bordure transparente (plutôt que none) réservée dès l'état de repos :
+     ainsi le survol ne fait que changer sa couleur, sans agrandir le
+     bouton ni décaler son texte. */
+  border: 2px solid transparent;
+  transition: transform var(--duration-fast) var(--ease-soft),
+    box-shadow var(--duration-fast) var(--ease-soft),
+    background var(--duration-fast) var(--ease-soft),
+    color var(--duration-fast) var(--ease-soft),
+    border-color var(--duration-fast) var(--ease-soft);
+}
+
+.cookie-consent-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
+}
+
+#cookie-consent-reject:hover {
+  background: var(--color-text);
+  color: var(--color-bg);
+  border-color: #e5484d;
+}
+
+#cookie-consent-accept:hover,
+#cookie-consent-accept-settings:hover {
+  background: var(--color-text);
+  color: var(--color-bg);
+  border-color: #30a46c;
+}
+
+#cookie-consent-save:hover {
+  background: #30a46c;
+  color: var(--color-bg);
+}
+
+.cookie-consent-gear {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  background: rgba(253, 251, 247, 0.08);
+  color: var(--color-bg);
+  transition: background var(--duration-fast) var(--ease-soft);
+}
+
+.cookie-consent-gear:hover {
+  background: rgba(253, 251, 247, 0.18);
+}
+
+.cookie-consent-desc {
+  margin-top: 12.6px;
+  font-size: 11.52px;
+  line-height: 1.4;
+  color: rgba(253, 251, 247, 0.75);
+}
+
+.cookie-consent-desc a {
+  color: var(--color-bg);
+  text-decoration: underline;
+}
+
+.cookie-consent-settings-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.cookie-consent-title {
+  font-family: var(--font-sans);
+  font-size: 20.7px;
+  font-weight: 800;
+  color: var(--color-bg);
+}
+
+.cookie-consent-close {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  font-size: 25.2px;
+  line-height: 1;
+  color: var(--color-bg);
+}
+
+.cookie-consent-hint {
+  margin-top: 16.2px;
+  font-size: 15.3px;
+  font-weight: 700;
+  color: var(--color-bg);
+}
+
+.cookie-consent-options {
+  margin-top: 11.7px;
+  padding: 16.2px 18px;
+  border-radius: 16.2px;
+  background: rgba(253, 251, 247, 0.06);
+}
+
+.cookie-consent-options-title {
+  font-size: 14.4px;
+  font-weight: 700;
+  color: var(--color-bg);
+  margin-bottom: 11.7px;
+}
+
+.cookie-consent-option + .cookie-consent-option {
+  margin-top: 15.3px;
+  padding-top: 15.3px;
+  border-top: 1px solid rgba(253, 251, 247, 0.14);
+}
+
+.cookie-consent-option-head {
+  display: flex;
+  align-items: center;
+  gap: 11.7px;
+}
+
+.cookie-consent-option-toggle {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 11.7px;
+  min-width: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 9px;
+  transition: opacity var(--duration-fast) var(--ease-soft);
+}
+
+.cookie-consent-option-toggle:hover {
+  opacity: 0.8;
+}
+
+.cookie-consent-option-icon {
+  flex-shrink: 0;
+  width: 23.4px;
+  height: 23.4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(253, 251, 247, 0.4);
+  font-size: 15.3px;
+  line-height: 1;
+  color: var(--color-bg);
+}
+
+.cookie-consent-option-name {
+  font-size: 15.48px;
+  font-weight: 700;
+  color: var(--color-bg);
+}
+
+.cookie-consent-option-required {
+  margin-left: 7.2px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #8fd19e;
+}
+
+.cookie-consent-toggle {
+  position: relative;
+  flex-shrink: 0;
+  width: 49.5px;
+  height: 27px;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: rgba(253, 251, 247, 0.18);
+  transition: background var(--duration-fast) var(--ease-soft);
+}
+
+/* Vert plus vif que celui, volontairement discret, du toggle "Necessary"
+   verrouillé ci-dessous : ces deux-là sont de vrais interrupteurs
+   actionnables, leur état "activé" doit se voir clairement. */
+.cookie-consent-toggle[aria-checked="true"]:not(:disabled) {
+  background: #30a46c;
+}
+
+.cookie-consent-toggle:disabled {
+  background: rgba(143, 209, 158, 0.4);
+  cursor: default;
+}
+
+.cookie-consent-toggle-dot {
+  position: absolute;
+  top: 2.25px;
+  left: 2.25px;
+  width: 22.5px;
+  height: 22.5px;
+  border-radius: 50%;
+  background: var(--color-bg);
+  transition: transform var(--duration-fast) var(--ease-soft);
+}
+
+.cookie-consent-toggle[aria-checked="true"] .cookie-consent-toggle-dot,
+.cookie-consent-toggle:disabled .cookie-consent-toggle-dot {
+  transform: translateX(22.5px);
+}
+
+.cookie-consent-option-desc {
+  margin-top: 8.1px;
+  margin-left: 35.1px;
+  font-size: 13.68px;
+  line-height: 1.5;
+  color: rgba(253, 251, 247, 0.65);
+}
+
+.cookie-consent-row--footer {
+  margin-top: 19.8px;
+}
+
+.cookie-consent-row--footer .cookie-consent-pill {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: center;
+}
+
+/* Les libellés français ("Enregistrer les préférences", "Accepter les
+   cookies"...) sont nettement plus longs que leurs équivalents anglais.
+   Les boutons doivent garder EXACTEMENT la même taille dans les deux
+   langues (voir .cookie-consent-pill) : seule la largeur du rectangle
+   s'adapte ici pour laisser ces libellés plus longs tenir sur une ligne.
+   document.documentElement.lang est déjà positionné par
+   applyStaticTranslations (voir main.js), donc ce sélecteur suit
+   automatiquement la bascule de langue. */
+html[lang="fr"] .cookie-consent[data-state="banner"] {
+  --cc-w: min(424.8px, calc(100vw - 45px));
+}
+
+html[lang="fr"] .cookie-consent[data-state="settings"] {
+  --cc-w: min(576px, calc(100vw - 45px));
+}
+
+html[lang="fr"] .cookie-consent-row {
+  gap: 7.2px;
+}
+
+@media (max-width: 480px) {
+  .cookie-consent {
+    left: 13.5px;
+    bottom: 13.5px;
+  }
+
+  /* Répète le sélecteur html[lang="fr"] ci-dessus (même spécificité) pour
+     que cette règle gagne bien la cascade en français aussi : sans ce
+     doublon, la règle html[lang="fr"] (plus spécifique, définie hors media
+     query donc active à toutes les largeurs) écrasait silencieusement
+     celle-ci sur mobile — le bandeau gardait une largeur pensée pour desktop
+     et se retrouvait décentré, avec une marge droite bien plus grande que
+     la gauche. */
+  .cookie-consent[data-state="banner"],
+  .cookie-consent[data-state="settings"],
+  html[lang="fr"] .cookie-consent[data-state="banner"],
+  html[lang="fr"] .cookie-consent[data-state="settings"] {
+    --cc-w: calc(100vw - 27px);
+  }
+
+  .cookie-consent-content {
+    padding: 17.1px 18px 21.6px;
+  }
+
+  /* Sur cette largeur réduite, "Tout refuser"/"Accepter les cookies" (et
+     "Enregistrer les préférences" dans le panneau réglages) ne tiennent
+     plus côte à côte sans que .cookie-consent-pill (overflow:hidden +
+     ellipsis) tronque leur libellé. Les boutons passent donc en pleine
+     largeur, empilés sous la rangée icône/engrenage — plus proche d'une
+     feuille d'actions iOS que d'essayer de tout caser sur une ligne. */
+  .cookie-consent-row {
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .cookie-consent-actions {
+    order: 3;
+    width: 100%;
+    flex-direction: column;
+    margin-top: 10.8px;
+  }
+
+  .cookie-consent-row--footer {
+    flex-wrap: wrap;
+  }
+
+  .cookie-consent-row--footer .cookie-consent-icon-btn {
+    order: 1;
+  }
+
+  .cookie-consent-row--footer .cookie-consent-pill {
+    order: 2;
+  }
+
+  .cookie-consent-pill {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Les boutons d'action empilés (ci-dessus) rendent le bandeau simple
+     plus haut qu'en une seule ligne : sans cet ajustement, .cookie-consent-
+     shell (hauteur fixe, overflow:hidden) rognait le bas du texte de
+     description. Ici comme sur desktop, ce n'est plus qu'un repli de premier
+     rendu : les deux états suivent désormais leur contenu (voir
+     updateShellHeight dans cookie-consent.js), pills empilées comprises. */
+  .cookie-consent[data-state="banner"] .cookie-consent-shell {
+    height: 255.6px;
+  }
+}
