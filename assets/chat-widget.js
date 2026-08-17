@@ -23,12 +23,16 @@
   const MAX_TURNS = 24; // même plafond que côté serveur
   const MAX_CHARS = 2000;
 
-  /* Message d'accueil. Il vit ici plutôt que dans le HTML des 40 pages (une
-     seule ligne à changer) et plutôt que côté serveur (il est purement
-     décoratif : il n'est jamais envoyé au modèle et ne coûte donc rien). */
-  const GREETING =
-    "Hello — I'm the Harborview assistant. Ask me about websites, automating " +
-    "the repetitive work, or how we could help your business.";
+  /* Bulles d'accueil, une par ligne. Elles vivent ici plutôt que dans le HTML
+     des 40 pages (une seule ligne à changer) et plutôt que côté serveur : elles
+     sont purement décoratives, ne sont jamais envoyées au modèle et ne coûtent
+     donc rien. Ce que dit cet accueil est repris dans le prompt système
+     (api/_lib/persona.mjs) pour que l'assistant ne se re-présente pas. */
+  const GREETING = ["Hi, I'm the Harborview assistant", "Do you have any questions?"];
+
+  // Décalage entre les deux bulles d'accueil : elles se posent l'une après
+  // l'autre plutôt que d'apparaître d'un bloc.
+  const GREETING_STAGGER = 140;
 
   function initChatWidget(root) {
     const shell = root.querySelector("#chat-widget-shell");
@@ -39,7 +43,6 @@
     const input = root.querySelector("#chat-widget-input");
     const sendBtn = root.querySelector("#chat-widget-send");
     const closeBtn = root.querySelector("#chat-widget-close");
-    const status = root.querySelector("#chat-widget-status");
 
     if (!shell || !bubbleFace || !panel || !log || !form || !input || !sendBtn || !closeBtn)
       return;
@@ -50,6 +53,10 @@
     // donc aucun token.
     let history = loadHistory();
     let streaming = false;
+    // Une conversation restaurée tient lieu d'accueil : on ne repart pas sur
+    // « Do you have any questions? » alors que le visiteur a déjà posé les
+    // siennes.
+    let greeted = history.length > 0;
 
     /* ---------- Ouverture / fermeture ---------- */
 
@@ -67,6 +74,7 @@
     function open() {
       setState("open");
       root.classList.remove("has-unread");
+      showGreetingOnce();
       scrollToEnd();
       // Le focus n'est pris qu'une fois la carte ouverte : sur mobile, le
       // clavier virtuel s'ouvrirait sinon par-dessus l'animation.
@@ -95,9 +103,14 @@
       log.scrollTop = log.scrollHeight;
     }
 
-    function addMessage(role, text) {
+    // animate : une bulle qui ARRIVE joue son entrée ; une conversation
+    // restaurée d'une page précédente s'affiche d'un coup, ses messages
+    // n'étant pas en train de survenir.
+    function addMessage(role, text, { animate = true, delay = 0 } = {}) {
       const el = document.createElement("div");
-      el.className = "chat-widget-msg chat-widget-msg--" + role;
+      el.className =
+        "chat-widget-msg chat-widget-msg--" + role + (animate ? " chat-widget-msg--enter" : "");
+      if (delay) el.style.animationDelay = delay + "ms";
       // textContent, jamais innerHTML : le texte vient d'un modèle et d'un
       // visiteur. Rien de ce qui transite ici ne doit pouvoir être interprété
       // comme du HTML.
@@ -109,7 +122,8 @@
 
     function addTypingIndicator() {
       const el = document.createElement("div");
-      el.className = "chat-widget-msg chat-widget-msg--bot chat-widget-typing";
+      el.className =
+        "chat-widget-msg chat-widget-msg--bot chat-widget-typing chat-widget-msg--enter";
       el.innerHTML = "<span></span><span></span><span></span>";
       el.setAttribute("aria-label", "Assistant is typing");
       log.appendChild(el);
@@ -121,7 +135,6 @@
       streaming = busy;
       sendBtn.disabled = busy;
       input.disabled = busy;
-      status.textContent = busy ? "Typing…" : status.dataset.idle;
     }
 
     /* ---------- Persistance ---------- */
@@ -149,10 +162,21 @@
     // visiteur l'a laissée, plutôt que sur un accueil qui ferait croire que
     // tout a été oublié. Le message d'accueil n'apparaît donc que sur une
     // conversation vierge.
-    if (history.length) {
-      history.forEach((m) => addMessage(m.role === "user" ? "user" : "bot", m.content));
-    } else {
-      addMessage("bot", GREETING);
+    history.forEach((m) =>
+      addMessage(m.role === "user" ? "user" : "bot", m.content, { animate: false })
+    );
+
+    /* Les bulles d'accueil ne sont créées qu'à la PREMIÈRE ouverture, pas au
+       chargement de la page. Une animation se joue au moment où l'élément
+       entre dans le DOM : posées dès l'init, derrière une carte encore
+       fermée, leur entrée se serait déroulée dans le vide et le visiteur
+       aurait trouvé les bulles déjà en place en ouvrant. */
+    function showGreetingOnce() {
+      if (greeted) return;
+      greeted = true;
+      GREETING.forEach((line, i) =>
+        addMessage("bot", line, { delay: i * GREETING_STAGGER })
+      );
     }
 
     /* ---------- Envoi et lecture du flux ---------- */

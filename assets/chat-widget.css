@@ -12,21 +12,33 @@
    font-size FLUIDE (8.33px à 1440px de large), donc des rem feraient changer
    le widget de taille avec la fenêtre. Même raison, même solution que dans
    cookie-consent.css.
+
+   La carte suit la maquette fournie : pas d'en-tête ni de titre, une croix
+   seule posée en haut à droite, les messages en pilules alignées à gauche, et
+   une barre de saisie pleine largeur en bas.
    ========================================================================= */
 
 /* ---------- Tokens et reset, portés par le seul widget ------------------- */
 
 .chat-widget {
-  --color-bg: #fdfbf7;
-  --color-text: #14120f;
+  /* Palette de la maquette. La carte et la barre de saisie sont deux gris
+     très proches : c'est ce faible écart qui donne l'aspect posé du modèle,
+     un contraste plus marqué ferait ressortir la barre comme un formulaire. */
+  --chat-surface: #151515; /* fond de la carte */
+  --chat-field: #20201f; /* barre de saisie */
+  --chat-bubble: #262625; /* bulle de l'assistant */
+  --chat-bubble-user: #333331; /* bulle du visiteur */
+  --chat-ink: #f4f3f1; /* texte */
+  --chat-ink-soft: #8b8b88; /* texte secondaire, placeholder */
+
   --font-sans: var(--font--body, "Helvetica Neue", Arial, sans-serif);
   --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
   --duration-fast: 150ms;
   --duration-normal: 300ms;
   --duration-slow: 600ms;
 
-  --chat-w: min(384px, calc(100vw - 44px));
-  --chat-h: min(560px, calc(100vh - 132px));
+  --chat-w: min(364px, calc(100vw - 44px));
+  --chat-h: min(556px, calc(100vh - 132px));
 
   font-size: 15px;
   line-height: 1.55;
@@ -44,10 +56,7 @@
   box-sizing: border-box;
 }
 
-:where(.chat-widget) p,
-:where(.chat-widget) h1,
-:where(.chat-widget) h2,
-:where(.chat-widget) h3 {
+:where(.chat-widget) p {
   margin: 0;
 }
 
@@ -88,8 +97,8 @@
 .chat-widget-shell {
   position: relative;
   overflow: hidden;
-  background: var(--color-text);
-  box-shadow: 0 10px 30px rgba(20, 18, 15, 0.35);
+  background: var(--chat-surface);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
   width: 61.2px;
   height: 61.2px;
   border-radius: 50%;
@@ -115,8 +124,11 @@
 .chat-widget[data-state="open"] .chat-widget-shell {
   width: var(--chat-w);
   height: var(--chat-h);
-  border-radius: 19.8px;
-  box-shadow: 0 24px 60px rgba(20, 18, 15, 0.35);
+  /* 36px : assez rond pour faire écho à la barre de saisie, qui est une
+     pilule pleine. Au-delà, l'arrondi mordrait sur la croix et sur la
+     première bulle. */
+  border-radius: 36px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
 }
 
 /* ---------- Bulle : cible de clic et icône ------------------------------- */
@@ -134,7 +146,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-bg);
+  color: var(--chat-ink);
   z-index: 3;
   transition: opacity var(--duration-fast) var(--ease-soft);
 }
@@ -185,7 +197,7 @@
   height: var(--chat-h);
   display: flex;
   flex-direction: column;
-  color: var(--color-bg);
+  color: var(--chat-ink);
 }
 
 /* Le panneau est rendu en permanence (c'est ce qui rend l'ouverture fluide),
@@ -205,75 +217,54 @@
   transition: opacity var(--duration-normal) var(--ease-soft) 120ms;
 }
 
-.chat-widget-head {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 18px 16px 14px 20px;
-  border-bottom: 1px solid rgba(253, 251, 247, 0.1);
-}
-
-.chat-widget-title {
-  flex: 1;
-  min-width: 0;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.chat-widget-status {
-  display: block;
-  font-size: 11.5px;
-  font-weight: 400;
-  color: rgba(253, 251, 247, 0.55);
-}
-
+/* Croix seule, posée par-dessus le fil de messages : la maquette n'a ni
+   barre d'en-tête ni filet de séparation. */
 .chat-widget-close {
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   border: 0;
-  background: rgba(253, 251, 247, 0.08);
-  color: var(--color-bg);
+  background: #2a2a29;
+  color: var(--chat-ink);
   transition: background var(--duration-fast) var(--ease-soft);
 }
 
 .chat-widget-close:hover {
-  background: rgba(253, 251, 247, 0.18);
+  background: #3a3a38;
 }
 
 .chat-widget-close svg {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
 }
 
 /* ---------- Fil de messages ---------------------------------------------- */
 
+/* Les messages partent du HAUT, comme sur la maquette : le vide se creuse
+   sous eux, jusqu'à la barre de saisie. Le retrait supérieur de 118px place la
+   première bulle à environ 22% de la hauteur de la carte, comme sur le modèle
+   — il ne sert donc pas seulement à dégager la croix. Ce vide fait partie de
+   la zone défilante : dès que la conversation s'allonge, il remonte hors champ
+   au lieu de rester coincé en haut. */
 .chat-widget-log {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 16px 20px;
+  padding: 118px 16px 8px;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 10px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(253, 251, 247, 0.25) transparent;
-}
-
-/* Colle les messages en bas de la carte tant qu'ils ne remplissent pas la
-   hauteur. `margin-top: auto` sur un pseudo-élément plutôt que
-   justify-content: flex-end sur le conteneur : ce dernier rogne le haut du
-   contenu dès qu'il déborde, dans un conteneur défilant. */
-.chat-widget-log::before {
-  content: "";
-  margin-top: auto;
+  scrollbar-color: rgba(244, 243, 241, 0.18) transparent;
 }
 
 .chat-widget-log::-webkit-scrollbar {
@@ -281,38 +272,59 @@
 }
 
 .chat-widget-log::-webkit-scrollbar-thumb {
-  background: rgba(253, 251, 247, 0.22);
+  background: rgba(244, 243, 241, 0.16);
   border-radius: 3px;
 }
 
+/* Pilules : le rayon vaut la moitié de la hauteur d'une ligne, donc les
+   messages courts sont parfaitement arrondis et les longs se contentent
+   d'arrondis généreux. */
 .chat-widget-msg {
-  max-width: 86%;
-  padding: 10px 14px;
-  border-radius: 16px;
-  font-size: 13.5px;
-  line-height: 1.5;
+  max-width: 84%;
+  padding: 9px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  line-height: 1.45;
   white-space: pre-wrap;
   word-wrap: break-word;
 }
 
 .chat-widget-msg--bot {
   align-self: flex-start;
-  background: rgba(253, 251, 247, 0.08);
-  border-bottom-left-radius: 5px;
+  background: var(--chat-bubble);
 }
 
 .chat-widget-msg--user {
   align-self: flex-end;
-  background: var(--color-bg);
-  color: var(--color-text);
-  border-bottom-right-radius: 5px;
+  background: var(--chat-bubble-user);
 }
 
 .chat-widget-msg--error {
   align-self: flex-start;
-  background: rgba(229, 72, 77, 0.16);
+  background: rgba(229, 72, 77, 0.18);
   color: #ffb3b5;
-  border-bottom-left-radius: 5px;
+}
+
+/* Apparition d'une bulle : montée courte avec un léger grossissement. La
+   classe n'est posée que sur les messages qui ARRIVENT (voir addMessage dans
+   le JS) — une conversation restaurée d'une page précédente s'affiche d'un
+   coup, puisque ses messages ne surviennent pas, ils étaient déjà là.
+   `both` retient l'état initial pendant le délai d'échelonnement des bulles
+   d'accueil : sans lui, elles s'afficheraient d'abord en clair avant de
+   disparaître pour rejouer leur entrée. */
+.chat-widget-msg--enter {
+  animation: chat-widget-enter 340ms var(--ease-soft) both;
+}
+
+@keyframes chat-widget-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* Trois points pendant l'attente du premier mot de la réponse. */
@@ -320,14 +332,14 @@
   display: flex;
   gap: 4px;
   align-items: center;
-  padding: 14px;
+  padding: 13px 16px;
 }
 
 .chat-widget-typing span {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: rgba(253, 251, 247, 0.55);
+  background: var(--chat-ink-soft);
   animation: chat-widget-bounce 1.2s var(--ease-soft) infinite;
 }
 
@@ -344,34 +356,39 @@
   30% { transform: translateY(-4px); opacity: 1; }
 }
 
-/* ---------- Zone de saisie ----------------------------------------------- */
+/* ---------- Barre de saisie ---------------------------------------------- */
 
+/* La barre EST le champ : le formulaire porte le fond et l'arrondi, la zone
+   de texte à l'intérieur reste transparente. C'est ce qui permet au bouton
+   d'envoi d'être posé dedans, à droite, comme sur la maquette. */
 .chat-widget-composer {
   flex-shrink: 0;
+  margin: 8px 16px 16px;
+  padding: 6px 6px 6px 18px;
   display: flex;
   align-items: flex-end;
-  gap: 10px;
-  padding: 12px 14px 14px 20px;
-  border-top: 1px solid rgba(253, 251, 247, 0.1);
+  gap: 8px;
+  background: var(--chat-field);
+  border-radius: 26px;
 }
 
-/* Les neutralisations (bordure, poignée de redimensionnement, apparence
-   native) sont portées par la CLASSE, pas par le reset en :where() plus haut.
-   Raison : ce site embarque des <style> dans le corps de page, donc APRÈS ce
-   fichier — leurs règles d'élément (textarea{resize:vertical}) gagnent les
-   égalités de spécificité contre :where(.chat-widget) textarea, toutes deux
-   en (0,0,1). Une classe, elle, l'emporte quel que soit l'ordre de source. */
 .chat-widget-input {
   flex: 1;
   min-width: 0;
-  /* max-height = 4 lignes environ : au-delà, la zone défile au lieu de
-     manger la hauteur du fil de messages (voir autoGrow dans le JS). */
+  /* max-height ≈ 4 lignes : au-delà, la zone défile au lieu de manger la
+     hauteur du fil de messages (voir autoGrow dans le JS). */
   max-height: 96px;
-  padding: 8px 0;
-  font-size: 13.5px;
-  line-height: 1.45;
-  color: var(--color-bg);
+  padding: 11px 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--chat-ink);
   overflow-y: auto;
+  /* Neutralisations portées par la CLASSE, pas par le reset en :where()
+     plus haut : ce site embarque des <style> dans le corps de page, donc
+     APRÈS ce fichier — leurs règles d'élément (textarea{resize:vertical})
+     gagnent les égalités de spécificité contre :where(.chat-widget)
+     textarea, toutes deux en (0,0,1). Une classe l'emporte quel que soit
+     l'ordre de source. */
   resize: none;
   appearance: none;
   border: 0;
@@ -382,44 +399,39 @@
 }
 
 .chat-widget-input::placeholder {
-  color: rgba(253, 251, 247, 0.4);
+  color: var(--chat-ink-soft);
 }
 
+/* Rond sombre à flèche montante, plus foncé que la barre qui l'entoure. */
 .chat-widget-send {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   border: 0;
-  background: var(--color-bg);
-  color: var(--color-text);
+  background: #0f0f0e;
+  color: var(--chat-ink);
   transition: transform var(--duration-fast) var(--ease-soft),
-    opacity var(--duration-fast) var(--ease-soft);
+    opacity var(--duration-fast) var(--ease-soft),
+    background var(--duration-fast) var(--ease-soft);
 }
 
 .chat-widget-send:hover:not(:disabled) {
+  background: #000;
   transform: translateY(-1px);
 }
 
 .chat-widget-send:disabled {
-  opacity: 0.35;
+  opacity: 0.4;
   cursor: default;
 }
 
 .chat-widget-send svg {
-  width: 16px;
-  height: 16px;
-}
-
-.chat-widget-legal {
-  flex-shrink: 0;
-  padding: 0 20px 12px;
-  font-size: 10.5px;
-  line-height: 1.4;
-  color: rgba(253, 251, 247, 0.4);
+  width: 17px;
+  height: 17px;
 }
 
 /* Anneau de focus visible sur fond sombre, seulement au clavier. La zone de
@@ -427,20 +439,16 @@
    lui donne le focus par programme à l'ouverture, Chromium l'entourerait d'un
    cadre permanent qui la ferait ressembler à un champ de formulaire. */
 .chat-widget :focus-visible:not(.chat-widget-input) {
-  outline: 2px solid rgba(253, 251, 247, 0.65);
+  outline: 2px solid rgba(244, 243, 241, 0.6);
   outline-offset: 2px;
 }
 
 /* ---------- Cohabitation avec le bandeau cookies ------------------------- */
 
-/* Sur téléphone, le bandeau cookies occupe presque toute la largeur en bas
-   de l'écran et passerait sous la bulle du chat. Le sélecteur de frère
-   fonctionne parce que le widget de chat est inséré APRÈS #cookie-consent
-   dans le HTML : aucun JavaScript n'a besoin de faire le lien. */
 @media (max-width: 640px) {
   .chat-widget {
     --chat-w: calc(100vw - 32px);
-    --chat-h: min(560px, calc(100vh - 108px));
+    --chat-h: min(556px, calc(100vh - 108px));
     right: 16px;
     bottom: 16px;
   }
@@ -450,8 +458,10 @@
      hauteur du bandeau dépend de son contenu et de la langue (voir
      updateShellHeight dans cookie-consent.js et la règle html[lang="fr"] de
      cookie-consent.css), donc toute valeur fixe serait fausse quelque part.
-     La bulle revient dès que le visiteur a répondu au bandeau ou l'a replié
-     — sur mobile, une tape en dehors suffit. */
+     Le sélecteur de frère fonctionne parce que le widget de chat est inséré
+     APRÈS #cookie-consent dans le HTML : aucun JavaScript n'a besoin de faire
+     le lien. La bulle revient dès que le visiteur a répondu au bandeau ou
+     l'a replié — sur mobile, une tape en dehors suffit. */
   #cookie-consent[data-state="banner"] ~ .chat-widget[data-state="bubble"],
   #cookie-consent[data-state="settings"] ~ .chat-widget[data-state="bubble"] {
     opacity: 0;
@@ -469,6 +479,10 @@
   }
 
   .chat-widget-typing span {
+    animation: none;
+  }
+
+  .chat-widget-msg--enter {
     animation: none;
   }
 }
