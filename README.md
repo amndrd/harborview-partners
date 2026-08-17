@@ -226,10 +226,15 @@ sans quoi le prompt système serait téléchargeable.
 
 - `CHAT_CONFIG.model` : `claude-haiku-4-5` (1 $/5 $ par million de tokens),
   `claude-sonnet-5` (3 $/15 $) ou `claude-opus-5` (5 $/25 $).
-- `COMPANY_FACTS` : les faits sur l'entreprise. Les lignes « À COMPLÉTER » sont
-  traitées comme inconnues — l'assistant renvoie vers `/contact` au lieu
-  d'inventer un bureau ou une prestation. **C'est ce bloc qu'il reste à
-  remplir** quand le contenu définitif du site sera arrêté.
+- `COMPANY_FACTS` : la seule source de l'assistant sur l'entreprise —
+  positionnement, clientèle, les trois pôles (présence en ligne, automatisation,
+  gestion), la méthode en quatre étapes, les engagements, les technologies et ce
+  que Harborview ne fait pas. Tout ce qui n'y figure pas, l'assistant dit
+  l'ignorer et renvoie vers `/contact`. **Les chiffres (délais, garanties) sont
+  des valeurs plausibles à valider**, pas des engagements vérifiés : relisez-les
+  avant l'ouverture au public, l'assistant les présente comme des faits. Aucune
+  adresse e-mail ni téléphone n'y figure volontairement — mieux vaut renvoyer
+  vers `/contact`, toujours juste, qu'une coordonnée inexistante.
 - `buildSystemPrompt()` : le ton, le périmètre et les interdits (jamais de prix
   ni de délai ferme, pas de conseil juridique ou douanier, hors-sujet refusé).
 

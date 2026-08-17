@@ -27,8 +27,8 @@
      seule ligne à changer) et plutôt que côté serveur (il est purement
      décoratif : il n'est jamais envoyé au modèle et ne coûte donc rien). */
   const GREETING =
-    "Hello — I'm the Harborview assistant. Ask me about freight forwarding, " +
-    "shipping modes, customs, or how we can help with your cargo.";
+    "Hello — I'm the Harborview assistant. Ask me about websites, automating " +
+    "the repetitive work, or how we could help your business.";
 
   function initChatWidget(root) {
     const shell = root.querySelector("#chat-widget-shell");
