@@ -445,6 +445,18 @@
 
 /* ---------- Cohabitation avec le bandeau cookies ------------------------- */
 
+/* Carte ouverte : le widget cookies s'efface en fondu et revient à la
+   fermeture. La classe est posée sur <html> par chat-widget.js (voir open /
+   close) plutôt que par un sélecteur de frère : #cookie-consent PRÉCÈDE
+   .chat-widget dans le HTML, et les combinateurs de frères ne regardent qu'en
+   avant — aucun sélecteur CSS ne peut donc remonter du chat vers le bandeau.
+   Le fondu lui-même vient de .cookie-consent, qui transitionne déjà son
+   opacité (voir cookie-consent.css). */
+.hv-chat-open .cookie-consent {
+  opacity: 0;
+  pointer-events: none;
+}
+
 @media (max-width: 640px) {
   .chat-widget {
     --chat-w: calc(100vw - 32px);

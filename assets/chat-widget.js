@@ -74,6 +74,9 @@
     function open() {
       setState("open");
       root.classList.remove("has-unread");
+      // Efface le badge cookies le temps de la conversation (voir
+      // .hv-chat-open dans chat-widget.css).
+      document.documentElement.classList.add("hv-chat-open");
       showGreetingOnce();
       scrollToEnd();
       // Le focus n'est pris qu'une fois la carte ouverte : sur mobile, le
@@ -83,6 +86,7 @@
 
     function close() {
       setState("bubble");
+      document.documentElement.classList.remove("hv-chat-open");
       bubbleFace.focus();
     }
 
