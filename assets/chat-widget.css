@@ -465,6 +465,15 @@
     bottom: 16px;
   }
 
+  /* 16px pile, pas moins : sous ce seuil, Safari iOS zoome sur le champ à la
+     mise au point et la page reste agrandie après la fermeture du clavier.
+     C'est la seule parade qui n'ampute pas l'accessibilité — l'autre méthode
+     répandue, maximum-scale=1 dans le meta viewport, désactive aussi le zoom
+     à deux doigts pour tout le site. */
+  .chat-widget-input {
+    font-size: 16px;
+  }
+
   /* Tant que le bandeau est déplié, la bulle du chat s'efface plutôt que de
      se poser dessus. Un simple décalage vertical ne marcherait pas : la
      hauteur du bandeau dépend de son contenu et de la langue (voir
