@@ -52,8 +52,17 @@
   padding-top: 2.6rem; /* le thème pose 1.6rem */
 }
 
+/* En mobile, 2.4rem ne suffisait pas : la marque tombait à 5-6 px du bord
+   supérieur alors qu'elle garde 16-20 px sur le côté, et cet écart la faisait
+   lire comme sortant de l'écran. 3.8rem égalise les deux dégagements à toutes
+   les largeurs de téléphone (mesuré : haut 20,3 / 18,8 / 16,7 px contre
+   gauche 19,9 / 18,3 / 16,3 px à 390 / 360 / 320 px).
+
+   Vérifié pour la contrainte décrite plus haut : la hauteur de .header reste
+   à son plancher (85 / 79 / 70 px selon la largeur) et le hero reste collé à
+   0 — le supplément de réserve est absorbé, il ne repousse rien. */
 @media screen and (max-width: 767px) {
   .header-inner {
-    padding-top: 2.4rem; /* le thème pose 1.5rem */
+    padding-top: 3.8rem; /* le thème pose 1.5rem */
   }
 }
