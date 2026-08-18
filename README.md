@@ -317,6 +317,11 @@ réelle : Google Analytics (beacon first-party proxifié + `gtag`), Mixpanel, et
 bannière de consentement CookieYes (qui aurait recouvert le site). Retirés des
 61 pages.
 
+La bannière CookieYes a depuis été remplacée par [notre propre bandeau](#bandeau-cookies),
+qui n'a rien de commun avec elle : il ne fait sortir aucune requête et ne charge
+aucun script. C'est justement parce que le tracking listé ci-dessus a disparu
+qu'il n'a rien à conditionner.
+
 Le gate de dev Vite (`localhost:3000`, actif uniquement sur le domaine de staging
 Webflow) a aussi été retiré — il était inerte.
 
