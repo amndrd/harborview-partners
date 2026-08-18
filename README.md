@@ -252,6 +252,49 @@ minute et par IP. Ce dernier compteur vit en mémoire : il protège un serveur
 unique, mais en serverless chaque instance a la sienne — pour un vrai plafond,
 utilisez celui de la plateforme (Vercel Firewall, Netlify rate limiting).
 
+## Bandeau cookies
+
+Repris tel quel du site Meridian (`js/main.js`, lignes 2709-3059), présent sur
+les 40 pages. Quatre écarts avec la source, chacun signalé en commentaire à
+l'endroit concerné dans `assets/cookie-consent.js` : la clé de stockage, la
+hauteur du bandeau simple pilotée par son contenu, l'amorçage en fin de fichier,
+et l'apparition déclenchée au défilement.
+
+**Il ne conditionne aucun script.** Tout le tracking ayant été retiré de la copie
+(voir plus bas), il n'y a rien à autoriser ni à bloquer : le choix est enregistré
+dans `localStorage` sous `harborview-cookie-consent` (`necessary`, `analytics`,
+`marketing`, `updatedAt`) et personne ne le relit. C'est une pièce d'interface,
+pas un gestionnaire de consentement — si vous rebranchez un jour un script tiers,
+c'est cette valeur qu'il faudra lire avant de le charger.
+
+**Séquence** — à la première visite, rien à l'arrivée : la bulle n'apparaît
+qu'une fois le hero dépassé (~75 % sorti), puis s'ouvre en bandeau 5 s plus tard.
+Le premier écran reste donc entièrement dégagé. Une fois un choix fait — ou dès
+la visite suivante s'il en existe un —, le widget reste une bulle discrète que le
+survol ou un clic rouvrent, pour revenir sur ses préférences à tout moment.
+
+Le repère de défilement est la première `<section>` dont la classe contient
+`hero`, ou l'élément désigné par `[data-cookie-reveal-after]` ; à défaut, 60 % de
+fenêtre parcourue. Tout se mesure en `getBoundingClientRect()`, jamais en
+`window.scrollY` : le conteneur qui défile change d'une page à l'autre (la fenêtre
+ici, `.body-inner` là, selon le montage de Lenis) et `window.scrollY` reste alors
+bloqué à 0. Même raison pour l'écoute en phase de capture — `scroll` ne remonte
+pas. Les repères sont relus quand ils quittent le document, les transitions Barba
+remplaçant le contenu sans recharger la page.
+
+| Fichier | Rôle |
+|---------|------|
+| `assets/cookie-consent.js` | La séquence, les trois choix (Reject all / Accept cookies / Save preferences), le stockage. |
+| `assets/cookie-consent.css` | La bulle, le bandeau, le panneau de préférences. |
+| `assets/cookie.svg` | L'icône de la bulle. |
+
+**Cohabitation avec le chatbot** — les deux visent le coin inférieur droit. Le
+bandeau s'efface en fondu tant que la carte du chat est ouverte, via une classe
+`.hv-chat-open` posée sur `<html>` par `chat-widget.js`. Le passage par une classe
+racine n'est pas un détour : `#cookie-consent` précède `.chat-widget` dans le HTML
+et les combinateurs de frères ne regardent qu'en avant — aucun sélecteur ne peut
+remonter du chat vers le bandeau.
+
 ## Ce que contient la copie
 
 | Dossier    | Contenu |
