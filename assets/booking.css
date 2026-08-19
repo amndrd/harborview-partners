@@ -451,11 +451,15 @@
 .body-inner:has(.bk) .header-menu-list { display: none; }
 .body-inner:has(.bk) .header-linkedin { opacity: 1; transform: none; }
 
-/* Le bouton Menu reprend la place du bouton retiré, au bord droit. */
+/* Le bouton Menu reprend la place du bouton retiré, au bord droit. Le panneau
+   déroulant s'ouvre vers la droite depuis son ancre : au bord de l'écran, il
+   sortait de la page et y ajoutait 188 px de défilement horizontal. On le
+   raccroche donc par la droite. */
 .body-inner:has(.bk) #w-node-_3d3962a8-36f0-9a73-787b-7f85fa5409c7-e7cf7e47 {
   grid-column: 13 / -2;
   justify-self: end;
 }
+.body-inner:has(.bk) .header-dropdown { left: auto; right: 0; }
 
 /* Le texte de la barre, en clair sur cette page. Le thème le tire de
    `--_color---content--main`, un jeu de variables qui vaut ici la version

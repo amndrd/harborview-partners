@@ -443,7 +443,9 @@ retiré, le visiteur y étant déjà. Les onglets sont retirés eux aussi : lais
 la charge du thème, qui les remonte dans leur masque, ils laissaient dépasser un
 liseré (33/255 contre 15 pour le fond) visible sur un grand écran sombre. Le bloc
 LinkedIn, lui, n'apparaît d'ordinaire qu'au défilement ; il n'y a rien à faire
-défiler ici, on le découvre donc d'emblée.
+défiler ici, on le découvre donc d'emblée. Le panneau du menu est raccroché par
+la droite : il s'ouvre depuis son ancre vers la droite, et au bord de l'écran il
+sortait de la page en y ajoutant 188 px de défilement horizontal.
 
 **Le pied de page et le bouton de la barre sont repeints** pour cette page
 seulement : le bandeau légal passe au noir avec le texte en blanc, et le bouton
