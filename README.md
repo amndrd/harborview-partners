@@ -416,7 +416,11 @@ Trois écrans, puis deux fins :
    le choix entre Google Meet et appel téléphonique. Le nom n'est pas redemandé :
    il a été donné au premier écran.
 4. **Planifié** : la carte de confirmation de Cal.com — rond vert, puis
-   *What / When / Who / Where*, jeton « Host », et l'ajout au calendrier.
+   *What / When / Who / Where*, jeton « Host », l'ajout au calendrier avec les
+   marques (Google, Outlook, Microsoft, `.ics`), un bouton vers la page
+   [Get in touch](#écrire-un-message-get-in-touch), et un bandeau
+   « Need to make a change? Reschedule or Cancel » : replanifier renvoie au
+   calendrier, annuler bascule sur la carte rouge.
 5. **Annulé** : la même carte en rouge, mentions barrées, jetons « Host » et
    « Guest ». Sans serveur, aucune réservation n'existe : cet écran est une
    maquette, atteignable par `/contact?state=cancelled`.
@@ -489,8 +493,23 @@ mesurerait une largeur nulle : il posait alors `width: 5px` en ligne sur chaque
 libellé, et le bloc révélé s'affichait à un mot par ligne. Replié par
 `max-height`, il garde sa largeur réelle pendant que le thème le mesure.
 
-De la page d'origine ne restent que le formulaire et son en-tête, sans le motif
-de demande. Carte, bureaux, adresses, hotline, horaires et vignette ont été
+**Le module de page du thème ne tourne plus ici.** La page ne portant plus de
+formulaire, `Hero.interact` du module *Contact* échouait au chargement
+(« e is not iterable »). Le conteneur porte donc un autre `data-barba-namespace`,
+et — puisque plus aucun module ne lève l'attribut — la section a perdu son
+`data-init-hidden` : sans quoi elle restait à `opacity: 0`, page blanche. Le
+module *Contact* du thème, lui, sert désormais la page « Get in touch », qui a le
+formulaire qu'il attend.
+
+## Écrire un message (/get-in-touch)
+
+Le formulaire de contact a sa page à part : titre « Get in touch », la même
+description qu'avant, puis « Send us a message » et les cinq champs (nom, société,
+e-mail, téléphone, message). C'est là que mène le bouton de la carte de
+confirmation, une fois le rendez-vous pris.
+
+De l'ancienne page de contact ne restent que ce formulaire et son en-tête, sans le
+motif de demande. Carte, bureaux, adresses, hotline, horaires et vignette ont été
 retirés.
 
 ## Ce que contient la copie

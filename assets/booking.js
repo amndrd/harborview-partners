@@ -326,9 +326,32 @@
       q('#bk-cal-ics').href = liens.ics;
 
       allerA('fait');
-      var contact = document.getElementById('bk-contact');
-      if (contact) contact.classList.add('est-visible');
     }
+
+    /* Replanifier renvoie au calendrier en gardant tout le reste ; annuler
+       remplit la carte d'annulation avec ce qui avait été retenu. Sans serveur,
+       ni l'un ni l'autre ne prévient qui que ce soit : c'est l'écran qui change,
+       pas une réservation. */
+    function remplitAnnule(quand, nom, mail) {
+      var fin2 = new Date(quand.getTime() + DISPO.duree * 60000);
+      q('#bk-a-quoi').textContent = '15 Min Call between Harborview Partners and ' + (nom || 'you');
+      q('#bk-a-quand-d').textContent = dateLongue(quand);
+      q('#bk-a-quand-h').textContent = heure(quand) + ' – ' + heure(fin2);
+      q('#bk-a-quand-tz').textContent = '(' + fuseau + ')';
+      q('#bk-a-qui').textContent = nom || '—';
+      q('#bk-a-mail').textContent = mail || '—';
+      q('#bk-a-par').textContent = mail || '—';
+    }
+
+    q('#bk-replanifier').addEventListener('click', function () {
+      dessineCreneaux();
+      allerA('quand');
+    });
+
+    q('#bk-annuler').addEventListener('click', function () {
+      remplitAnnule(etat.creneau, etat.nom, etat.email);
+      allerA('annule');
+    });
 
     function texte(v) {
       return String(v).replace(/[&<>"]/g, function (c) {
@@ -366,10 +389,7 @@
       var quand = new Date();
       quand.setDate(quand.getDate() + 2);
       quand.setHours(9, 30, 0, 0);
-      var fin2 = new Date(quand.getTime() + DISPO.duree * 60000);
-      q('#bk-a-quand-d').textContent = dateLongue(quand);
-      q('#bk-a-quand-h').textContent = heure(quand) + ' – ' + heure(fin2);
-      q('#bk-a-quand-tz').textContent = '(' + fuseau + ')';
+      remplitAnnule(quand, '', '');
       allerA('annule');
     } else {
       allerA('qui');

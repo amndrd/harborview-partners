@@ -380,27 +380,6 @@
   .bk-btn { width: 100%; }
 }
 
-/* ── Le bloc de contact, révélé après la réservation ──────────────────────
-   Replié, pas masqué : `display:none` le retirerait du flux, et le SplitText
-   du thème — qui découpe les textes au chargement — mesurerait une largeur
-   nulle. Il posait alors `width: 5px` en ligne sur chaque libellé, et le bloc
-   révélé s'affichait à un mot par ligne. */
-.bk-contact { max-height: 0; overflow: hidden; opacity: 0; pointer-events: none; }
-.bk-contact.est-visible {
-  max-height: none; overflow: visible; opacity: 1; pointer-events: auto;
-  margin-top: 8rem;
-  animation: bk-fade-in-up .6s ease both;
-}
-.bk-contact .heading,
-.bk-contact .txt,
-.bk-contact .input-field { color: #fafafa; }
-.bk-contact .input-field { -webkit-text-fill-color: #fafafa; }
-.bk-contact .input-label { color: #a3a3a3; }
-.bk-contact .line { background-color: #262626; }
-.bk-contact .btn { background: #fff; border-color: #fff; color: #000; }
-/* Le thème pose un texte indicatif dans chaque champ en plus du libellé au
-   dessus : invisible sur fond blanc, il doublait le libellé sur le noir. */
-.bk-contact .input-field::placeholder { color: #ffffff1f; }
 
 /* ── Largeur de la carte, selon l'écran ────────────────────────────────────
    Le calendrier a besoin de ses trois colonnes ; les autres écrans, non. Sur
@@ -474,3 +453,38 @@
   border-color: var(--cal-bg-inverted);
   color: var(--cal-text-inverted);
 }
+
+/* ── Pied de la carte de confirmation ──────────────────────────────────────
+   Les boutons d'ajout au calendrier portent leurs marques, et le bandeau du
+   dessous reprend celui de la référence : un ton plus clair que la carte, et
+   deux liens en toutes lettres plutôt que des boutons.
+
+   Replanifier renvoie au calendrier ; annuler bascule sur la carte rouge. Sans
+   serveur, ni l'un ni l'autre ne prévient personne : c'est l'écran qui change,
+   pas une réservation. */
+.bk-agenda a svg { display: block; }
+.bk-contact-lien { display: flex; justify-content: center; margin-top: 2.4rem; }
+.bk-btn--large { display: inline-block; padding: 1.1rem 2.4rem; text-decoration: none; }
+
+.bk-changer {
+  background: var(--cal-bg-muted);
+  border-top: 1px solid var(--cal-border-subtle);
+  color: var(--cal-text-subtle);
+  font-size: 1.3rem;
+  padding: 1.6rem 2.4rem;
+  text-align: center;
+}
+.bk-changer button {
+  background: none;
+  border: none;
+  color: var(--cal-text-emphasis);
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: .25em;
+}
+.bk-changer button:hover { opacity: .75; }
+
+/* La page « Get in touch » : le formulaire prend la largeur du contenu. */
+.gt-holder { grid-column: 1 / -1; padding-bottom: 10rem; }
