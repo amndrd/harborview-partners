@@ -494,13 +494,19 @@
   .need-help-title {
     font-family: 'Sora', var(--font--heading);
     font-weight: 370;             /* graisse réelle de la police variable */
-    font-size: 7vw;
+    font-size: 5.6vw;
     line-height: 1.05;
     text-align: center;
     white-space: nowrap;
     width: max-content;
     margin-left: auto;
     margin-right: auto;
+  }
+  /* Le téléphone garde les 7vw d'origine : le titre y est déjà au plus juste,
+     et le réduire encore l'aurait mis au niveau de la description (21,8 px
+     contre 17,9 px à 390 px de large). */
+  @media screen and (max-width: 767px) {
+    .need-help-title { font-size: 7vw; }
   }
   /* ── En-tête ──────────────────────────────────────────────────────────
      Navigation à sa place d'origine, simplement décalée vers la droite
@@ -548,6 +554,26 @@
   }
   .home-hero-title {
     width: auto;
+  }
+  /* Description : deux lignes. Le thème la tenait en 1.6rem dans une colonne de
+     32.6rem, ce qui la coupait en trois. La largeur suit la taille (les deux en
+     rem, donc proportionnelles à l'écran) : la coupure tombe au même endroit de
+     992 à 1920 px, juste après « grow online, ». */
+  .home-hero-desc {
+    max-width: 72rem;
+  }
+  .home-hero-desc .txt {
+    font-size: 2.4rem;
+  }
+  /* Sous 767 px l'unité rem change d'échelle et la colonne dépasserait l'écran.
+     Trois lignes comme avant, à peine plus grandes. */
+  @media screen and (max-width: 767px) {
+    .home-hero-desc {
+      max-width: 36rem;
+    }
+    .home-hero-desc .txt {
+      font-size: 1.8rem;
+    }
   }
   .home-hero-links {
     justify-content: center;

@@ -65,7 +65,12 @@ webclips 180/192/512, avatar `hp-avt`, et l'image de partage `OG.jpg`.
   le menu déroulant qui sert, et sous 768 px le thème la passe en `display:none`.
 - **Hero** : le bloc de contenu (label, titre, description, boutons) prend toute
   la largeur (`grid-column:1/-1`) et se centre — mesuré à 1440 px, les quatre
-  éléments ont leur centre à 720 px. Verticalement, il est centré **entre le bas
+  éléments ont leur centre à 720 px. La description tient sur deux lignes :
+  `2.4rem` dans une colonne de `72rem` (le thème posait `1.6rem` dans `32.6rem`,
+  ce qui la coupait en trois). Taille et largeur étant toutes deux en rem, la
+  coupure tombe au même endroit de 992 à 1920 px, juste après « grow online, ».
+  Sous 768 px l'unité rem change d'échelle : la colonne y redescend à `36rem` et
+  le corps à `1.8rem`, pour trois lignes comme avant. Verticalement, il est centré **entre le bas
   du logo et le bas de l'écran** : `justify-content:center` avec une réserve
   haute égale au bas du logo (`padding-top:7.55rem`, `5.7rem` sous 767 px où
   l'en-tête est plus compact) et une réserve basse nulle.
@@ -86,8 +91,10 @@ Aucun `text-transform` — le titre s'affiche tel qu'il est saisi.
   servis depuis `/cdn` comme le reste des polices : aucune requête ne sort vers
   `fonts.gstatic.com`. Elle a remplacé Bricolage Grotesque, qui n'avait pas
   d'autre usage dans le site et dont les fichiers sont partis avec elle.
-- Corps en `7vw`, `white-space:nowrap`. Vérifié de 390 à 1920 px : deux lignes,
-  sans débordement — au plus large, 1 339 px de titre pour 1 920 px d'écran.
+- Corps en `5.6vw`, `white-space:nowrap`. Vérifié de 390 à 1920 px : deux lignes,
+  sans débordement — au plus large, 1 071 px de titre pour 1 920 px d'écran. Le
+  téléphone (< 768 px) garde les `7vw` d'origine : le titre y est déjà au plus
+  juste, et le réduire l'aurait mis au niveau de la description.
 - Apparition : `assets/hero-title-reveal.js`, CSS dans le `<style>` embarqué
   d'`index.html`.
 
