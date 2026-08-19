@@ -124,16 +124,68 @@ négative pour ne pas toucher à l'interligne ; et la sortie va à `-115%` pour
 
 ## Arrière-plan du hero (accueil)
 
-**Noir plein, rien d'autre.** Le globe terrestre en Three.js et le ciel étoilé en
-image avaient d'abord laissé place à une sphère de points dessinée au canvas 2D ;
-elle est partie à son tour (commits `08fd5f8` et `79e4a39`). Le hero ne porte plus
-aucun calque : `.home-hero` est peint en noir par le thème, et c'est tout ce qui
-reste — le fond mesuré est bien `rgb(0, 0, 0)`.
+Une trame de points parcourue par une **onde circulaire** — des cercles qui
+s'élargissent depuis le centre, comme après une goutte d'eau. Dessin au canvas 2D
+dans `assets/hero-dots.js`. Le calque `.hv-bg` est le premier enfant de
+`.home-hero-stick`, qui est collant : il reste donc fixe pendant les 150 vh du
+hero, exactement comme le globe qu'il a fini par remplacer.
 
-La sphère n'est pas perdue pour autant : `background/sphere.html` est la page de
-référence autonome où elle se règle, et donc la copie de côté si elle doit
-revenir. Ce qui a été retiré, c'est son câblage dans la page — `.hv-bg` (canvas,
-voile, vignette, grain), son CSS et `assets/hero-sphere.js`.
+**Les réglages sont mesurés, pas devinés.** Ils viennent de sept images d'une
+vidéo de référence, analysées au pixel : détection des points, ajustement de
+cercle sur les crêtes, profils radiaux, analyse de teinte. Le bloc `CFG` en tête
+du fichier porte chaque mesure en commentaire.
+
+| Ce qu'on voit | Réglage | Mesure d'origine |
+|---|---|---|
+| Grille carrée | pas de 29 px, plancher 20 | 12,5 px pour 630 de large, soit 2 % de la largeur |
+| Point au repos | opacité 7,5 %, rayon 0,04 pas | luminance 12-20 sur 255 |
+| Rythme | une onde toutes les 7 s, traversée en 6 s | 7,15 s, vitesse constante à ±5 % |
+| Crête | demi-largeur 0,075 D | 0,06 D à mi-hauteur, profil symétrique |
+| Vie de l'onde | naît discrète, culmine aux ¾ du trajet, s'éteint au bord | 0,51 / 0,83 / 1,00 / 0,76 à 28 / 53 / 74 / 83 % du trajet |
+| Centre | 49,4 % de la largeur, 56,5 % de la hauteur | fixe à ±5 px sur 10 s, quelle que soit la souris |
+
+`D` est la demi-diagonale du hero. C'est la seule unité qui garde la même
+animation d'un format à l'autre : l'onde couvre exactement le hero en 6 s, du
+téléphone au 1920. Le pas de la grille, lui, est en pixels et borné — proportionnel
+à la largeur, il collerait les points à 390 px.
+
+**Au survol, la souris n'impose pas sa forme** : elle ajoute de l'énergie à ce que
+l'onde dessine déjà. C'est net sur la référence — les points blancs autour du
+curseur suivent l'arc de la crête, pas un cercle autour du pointeur.
+
+- Éclaircissement dans un rayon de `0,125 D`, **teinte dans un rayon deux fois plus
+  large** (`0,28 D`) : la couleur déborde largement la zone éclairée.
+- La teinte se pose **sur** le niveau de l'onde. Entre deux crêtes, le curseur
+  laisse donc des points sombres mais colorés (mesuré sur la référence :
+  RGB 17, 9, 22).
+- Elle **dérive dans le temps**, un tour complet en 25 s. La référence montre tout
+  le spectre — turquoise, bleu, violet, magenta, rouge — sans loi lisible ni
+  corrélation avec la position du curseur ; une dérive lente est ce qui reproduit
+  le mieux cette variété.
+- La crête se **bombe** au passage du curseur, dans un rayon de `0,23 D`.
+
+Rien de tout cela sur écran tactile (`pointer: coarse`) ni sous
+`prefers-reduced-motion`, où l'onde est figée à son plein et la boucle arrêtée.
+
+**Coût.** Deux passes de dessin : tous les points au repos — l'immense majorité —
+sont empilés dans un seul tracé et remplis d'un coup ; seuls ceux que l'onde ou le
+curseur touchent sont traités un par un, avec leur couleur. Le halo des points
+vifs est une empreinte pré-dessinée qu'on étire, pas un dégradé recalculé à chaque
+image — et un aplat ferait pire que rien, son bord net cerclerait chaque point
+d'un anneau gris. Mesuré à 1440 × 900 : **122 images/s**.
+
+**Le fondu au scroll est rejoué**, comme pour la sphère avant elle. Le thème
+effaçait `.home-hero-globe` et `.home-hero-bg-star` pendant que la section suivante
+remontait ; ces deux éléments ayant disparu, `hero-dots.js` reproduit le fondu sur
+les mêmes bornes (`top top-=20%` → `center top`, au-dessus de 991 px). Il porte sur
+le canvas et non sur le calque : le noir du fond, lui, doit tenir jusqu'au bout.
+
+**Le site est une SPA.** Barba récupère les pages en XHR : le hero est un nœud neuf
+à chaque retour sur l'accueil. Un `MutationObserver` compare le canvas courant à
+celui de l'instance en cours — nouveau canvas, nouvelle instance ; plus de canvas,
+on démonte (boucle, `ResizeObserver` et écouteurs compris). Le pointeur est écouté
+sur `document` et non sur le canvas : `.home-hero-text-wrap` couvre toute la
+largeur du hero par-dessus lui et avalerait les événements.
 
 **Un squelette masqué subsiste.** La timeline d'intro du thème
 (`app/chunks/Home-*.js`, minifié) cible encore `.home-hero-globe`,
@@ -235,8 +287,8 @@ widget) est partie avec lui, et reviendra avec lui.
 | `app/`     | L'application custom du site (Vite/Rolldown) : Three.js, GSAP, Barba.js, Lenis, Swiper, curseur custom — 34 chunks |
 | `vendor/`  | jQuery et la librairie Finsweet Attributes (47 chunks) |
 | `images/ocean/` | Textures de la scène Three.js de l'accueil |
-| `assets/`  | Les ajouts maison : `hero-title-reveal.js` (apparition du titre), `header.css` et `logo-glass.css` (barre et marque), le bandeau cookies (`cookie-consent.*`, `cookie.svg`) |
-| `background/` | `sphere.html` — la sphère de points, autonome et réglable ; plus câblée dans le site, gardée comme référence |
+| `assets/`  | Les ajouts maison : `hero-dots.js` (fond animé du hero), `hero-title-reveal.js` (apparition du titre), `header.css` et `logo-glass.css` (barre et marque), le bandeau cookies (`cookie-consent.*`, `cookie.svg`) |
+| `background/` | `sphere.html` — la sphère de points qui a occupé ce fond entre le globe et l'onde ; autonome et réglable, plus câblée dans le site |
 | `serve.mjs` | Serveur statique (URLs propres, `Range` pour les vidéos) |
 
 Tout est **auto-hébergé** : aucune requête ne sort vers le CDN d'origine.
