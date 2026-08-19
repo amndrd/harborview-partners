@@ -1,337 +1,351 @@
 /* ── Réservation d'appel (page /contact) ───────────────────────────────────
-   Trois écrans dans une même carte sombre : qui appelle, quand, et comment.
-   Le calendrier et l'écran de confirmation reprennent la disposition de
-   Cal.com — mois à gauche, créneaux à droite, puis récapitulatif à gauche et
-   formulaire à droite — sur la palette du site.
+   Le module reprend le booker de Cal.com : mêmes proportions, même palette,
+   mêmes animations. Les couleurs ne sont pas approchées à l'œil — elles
+   viennent de la feuille de Cal.com (variables `--cal-*`, sélecteur `.dark`),
+   relevées et reportées telles quelles dans le bloc ci-dessous. Les
+   animations aussi : `fade-in-up`, `slideInBottom` et `fadeIn` sont leurs
+   propres images-clés.
 
-   La carte est sombre sur une page claire : c'est voulu, c'est le seul bloc
-   interactif de la page et il doit se détacher. Les états sont pilotés par
-   data-step sur .bk, jamais par du style en ligne, pour que tout reste
-   inspectable. */
+   Ce qui n'est pas repris, à dessein : le mobilier du produit Cal.com —
+   « Retour aux réservations », le pied « Cal.com », « Signaler la
+   réservation », la bascule de superposition d'agenda. Sur ce site, ces
+   éléments ne mèneraient nulle part. */
 
-.bk {
-  --bk-fond: #0d0d0d;
-  --bk-fond-2: #171717;
-  --bk-bord: #ffffff1f;
-  --bk-bord-fort: #ffffff33;
-  --bk-texte: #f4f4f4;
-  --bk-gris: #ffffff8c;
-  --bk-gris-faible: #ffffff40;
-  --bk-actif: #ffffff;
-
-  background: var(--bk-fond);
-  border: 1px solid var(--bk-bord);
-  border-radius: 1.6rem;
-  color: var(--bk-texte);
-  /* La carte ne prend pas toute la largeur du contenu : au-delà, les cases du
-     calendrier — carrées — deviennent des pavés de 150 px. */
-  max-width: 92rem;
-  margin: 0 auto;
-  font-family: var(--font--body, 'Helvetica Neue', Arial, sans-serif);
-  overflow: hidden;
+/* Inter, la police de Cal.com, servie depuis /cdn comme les autres : le
+   miroir reste autonome, sans requête vers fonts.gstatic.com. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/cdn/6a44eec1ed1af2c4c403df6b/Inter-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/cdn/6a44eec1ed1af2c4c403df6b/Inter-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
-/* Les trois écrans se remplacent : un seul est monté à la fois. */
+.bk {
+  /* Palette relevée dans la feuille de Cal.com, sélecteur `.dark`. */
+  --cal-bg: #0f0f0f;
+  --cal-bg-muted: #171717;
+  --cal-bg-subtle: #262626;
+  --cal-bg-emphasis: #404040;
+  --cal-bg-inverted: #fafafa;
+  --cal-text: #d4d4d4;
+  --cal-text-emphasis: #fafafa;
+  --cal-text-subtle: #a3a3a3;
+  --cal-text-inverted: #000;
+  --cal-border: #4d4d4d;
+  --cal-border-subtle: #262626;
+  --cal-border-emphasis: #737373;
+  --cal-brand: #fff;
+  --cal-brand-text: #000;
+  --cal-bg-success: #285231;
+  --cal-bg-error: #772522;
+
+  background: var(--cal-bg);
+  border: 1px solid var(--cal-border-subtle);
+  border-radius: 1.6rem;
+  color: var(--cal-text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  font-size: 1.4rem;
+  line-height: 1.45;
+  margin: 0 auto;
+  max-width: 98rem;
+  overflow: hidden;
+  animation: bk-slideInBottom .5s cubic-bezier(.16, 1, .3, 1) both;
+}
+
+/* Images-clés de Cal.com, reprises à l'identique. */
+@keyframes bk-fadeIn { from { opacity: 0 } to { opacity: 1 } }
+@keyframes bk-fade-in-up { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
+@keyframes bk-slideInBottom { from { opacity: 0; transform: translateY(30%) } to { opacity: 1; transform: none } }
+
 .bk-ecran { display: none; }
 .bk[data-step='qui'] .bk-ecran--qui,
 .bk[data-step='quand'] .bk-ecran--quand,
 .bk[data-step='confirmer'] .bk-ecran--confirmer,
-.bk[data-step='fait'] .bk-ecran--fait { display: block; }
+.bk[data-step='fait'] .bk-ecran--fait,
+.bk[data-step='annule'] .bk-ecran--annule { display: block; animation: bk-fadeIn .3s ease both; }
 
-/* ── Fil des étapes ─────────────────────────────────────────────────────── */
-.bk-fil {
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-  padding: 1.8rem 2.4rem;
-  border-bottom: 1px solid var(--bk-bord);
-  font-size: 1.2rem;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: var(--bk-gris-faible);
+/* ── Colonne de gauche : l'événement ───────────────────────────────────── */
+.bk-aside, .bk-recap {
+  padding: 2.4rem;
+  border-right: 1px solid var(--cal-border-subtle);
 }
-.bk-fil-item { display: flex; align-items: center; gap: .8rem; }
-.bk-fil-num {
-  width: 2.2rem; height: 2.2rem;
-  display: grid; place-items: center;
-  border: 1px solid currentColor;
+.bk-marque {
+  width: 3.2rem; height: 3.2rem;
   border-radius: 50%;
-  font-size: 1.1rem;
+  background: linear-gradient(135deg, #4b4b4b, #d9d9d9);
+  color: var(--cal-text-inverted);
+  display: grid; place-items: center;
+  font-size: 1.2rem; font-weight: 700;
+  margin-bottom: 1.2rem;
 }
-.bk-fil-item.est-actif { color: var(--bk-texte); }
-.bk-fil-item.est-fait { color: var(--bk-gris); }
-.bk-fil-item.est-fait .bk-fil-num { background: var(--bk-gris); border-color: var(--bk-gris); color: var(--bk-fond); }
-.bk-fil-sep { flex: 1; height: 1px; background: var(--bk-bord); }
-
-@media (max-width: 767px) {
-  .bk-fil { padding: 1.4rem 1.6rem; gap: .8rem; font-size: 1rem; }
-  .bk-fil-item span:not(.bk-fil-num) { display: none; }
+.bk-recap-hote { color: var(--cal-text-subtle); font-size: 1.3rem; font-weight: 500; margin-bottom: .2rem; }
+.bk-recap-titre {
+  color: var(--cal-text-emphasis);
+  font-size: 1.9rem; font-weight: 600; letter-spacing: -.01em;
+  margin: 0 0 1.6rem;
 }
-
-/* ── Écran 1 : qui appelle ──────────────────────────────────────────────── */
-.bk-corps { padding: 3.2rem 2.4rem; }
-.bk-titre { font-size: 2.4rem; line-height: 1.2; margin: 0 0 .8rem; font-weight: 500; }
-.bk-sous-titre { color: var(--bk-gris); font-size: 1.5rem; margin: 0 0 3.2rem; max-width: 52rem; }
-
-.bk-champ { margin-bottom: 2.4rem; }
-.bk-label {
-  display: block;
+.bk-recap-ligne {
+  display: flex; align-items: flex-start; gap: .8rem;
+  color: var(--cal-text-emphasis);
   font-size: 1.3rem;
-  margin-bottom: .8rem;
-  color: var(--bk-texte);
+  margin-bottom: 1rem;
 }
-.bk-label span { color: var(--bk-gris-faible); }
-.bk-input,
-.bk-textarea {
+.bk-recap-ligne svg { flex: none; width: 1.5rem; height: 1.5rem; margin-top: .15rem; color: var(--cal-text-subtle); }
+
+/* ── Écran 1 : les détails ─────────────────────────────────────────────── */
+.bk-corps { padding: 2.8rem 2.4rem; }
+.bk-titre {
+  color: var(--cal-text-emphasis);
+  font-size: 1.9rem; font-weight: 600; letter-spacing: -.01em;
+  margin: 0 0 2rem;
+}
+.bk-champ { margin-bottom: 1.6rem; }
+.bk-label {
+  color: var(--cal-text-emphasis);
+  display: block;
+  font-size: 1.3rem; font-weight: 500;
+  margin-bottom: .6rem;
+}
+.bk-label span { color: var(--cal-text-subtle); }
+.bk-input, .bk-textarea {
   width: 100%;
-  background: var(--bk-fond-2);
-  border: 1px solid var(--bk-bord);
+  background: var(--cal-bg);
+  border: 1px solid var(--cal-border);
   border-radius: .8rem;
-  color: var(--bk-texte);
+  color: var(--cal-text-emphasis);
   font: inherit;
-  font-size: 1.5rem;
-  padding: 1.2rem 1.4rem;
-  transition: border-color .2s;
+  padding: .9rem 1.2rem;
+  transition: border-color .15s, box-shadow .15s;
 }
-.bk-textarea { min-height: 10rem; resize: vertical; line-height: 1.45; }
-.bk-input::placeholder, .bk-textarea::placeholder { color: var(--bk-gris-faible); }
-.bk-input:focus, .bk-textarea:focus { outline: none; border-color: var(--bk-bord-fort); }
+.bk-textarea { min-height: 8rem; resize: vertical; }
+.bk-input::placeholder, .bk-textarea::placeholder { color: var(--cal-text-subtle); }
+.bk-input:focus, .bk-textarea:focus {
+  outline: none;
+  border-color: var(--cal-border-emphasis);
+  box-shadow: 0 0 0 1px var(--cal-border-emphasis);
+}
 .bk-champ.est-fautif .bk-input,
-.bk-champ.est-fautif .bk-textarea,
-.bk-champ.est-fautif .bk-choix { border-color: #ff6b6b80; }
-.bk-erreur { display: none; color: #ff8f8f; font-size: 1.2rem; margin-top: .6rem; }
+.bk-champ.est-fautif .bk-textarea { border-color: #d95c5c; }
+.bk-erreur { display: none; color: #f18f8f; font-size: 1.2rem; margin: .4rem 0 0; }
 .bk-champ.est-fautif .bk-erreur { display: block; }
 
-/* Services : des pastilles plutôt qu'une liste déroulante — tout est visible
-   d'un coup d'œil, et le choix se fait en un geste. */
-.bk-pastilles { display: flex; flex-wrap: wrap; gap: .8rem; }
+.bk-pastilles { display: flex; flex-wrap: wrap; gap: .6rem; }
 .bk-pastille {
-  background: var(--bk-fond-2);
-  border: 1px solid var(--bk-bord);
-  border-radius: 100rem;
-  color: var(--bk-gris);
+  background: var(--cal-bg-muted);
+  border: 1px solid var(--cal-border-subtle);
+  border-radius: .6rem;
+  color: var(--cal-text);
   cursor: pointer;
-  font: inherit;
-  font-size: 1.4rem;
-  padding: .9rem 1.6rem;
-  transition: color .2s, border-color .2s, background-color .2s;
+  font: inherit; font-size: 1.3rem;
+  padding: .7rem 1.1rem;
+  transition: background-color .15s, border-color .15s, color .15s;
 }
-.bk-pastille:hover { color: var(--bk-texte); border-color: var(--bk-bord-fort); }
+.bk-pastille:hover { background: var(--cal-bg-subtle); color: var(--cal-text-emphasis); }
 .bk-pastille[aria-pressed='true'] {
-  background: var(--bk-actif);
-  border-color: var(--bk-actif);
-  color: #0d0d0d;
+  background: var(--cal-brand);
+  border-color: var(--cal-brand);
+  color: var(--cal-brand-text);
 }
 
-/* ── Boutons ────────────────────────────────────────────────────────────── */
-.bk-actions { display: flex; align-items: center; justify-content: flex-end; gap: 1.6rem; margin-top: 3.2rem; }
+/* ── Boutons, dans le style de Cal.com ─────────────────────────────────── */
+.bk-actions { display: flex; align-items: center; justify-content: flex-end; gap: 1.2rem; margin-top: 2rem; }
 .bk-btn {
-  background: var(--bk-actif);
-  border: 1px solid var(--bk-actif);
+  background: var(--cal-brand);
+  border: 1px solid var(--cal-brand);
   border-radius: .8rem;
-  color: #0d0d0d;
+  color: var(--cal-brand-text);
   cursor: pointer;
-  font: inherit;
-  font-size: 1.4rem;
-  font-weight: 500;
-  padding: 1.1rem 2.2rem;
-  transition: opacity .2s;
+  font: inherit; font-size: 1.3rem; font-weight: 500;
+  padding: .85rem 1.6rem;
+  transition: opacity .15s;
 }
-.bk-btn:hover { opacity: .85; }
-.bk-btn--fantome { background: none; border-color: transparent; color: var(--bk-gris); }
-.bk-btn--fantome:hover { color: var(--bk-texte); opacity: 1; }
+.bk-btn:hover { opacity: .8; }
+.bk-btn--fantome { background: none; border-color: transparent; color: var(--cal-text-subtle); }
+.bk-btn--fantome:hover { color: var(--cal-text-emphasis); opacity: 1; }
 
-/* ── Écran 2 : le calendrier, en deux colonnes ──────────────────────────── */
-.bk-quand { display: grid; grid-template-columns: minmax(0, 1fr) 27rem; }
-.bk-cal { padding: 2.4rem; }
-.bk-creneaux { padding: 2.4rem; border-left: 1px solid var(--bk-bord); display: flex; flex-direction: column; }
+/* ── Écran 2 : événement | mois | créneaux ─────────────────────────────── */
+.bk-quand { display: grid; grid-template-columns: 24rem minmax(0, 1fr) 25rem; }
+.bk-cal { padding: 2rem; animation: bk-fadeIn .35s ease both; }
+.bk-creneaux {
+  padding: 2rem 1.6rem 2rem 2rem;
+  border-left: 1px solid var(--cal-border-subtle);
+  display: flex; flex-direction: column;
+  animation: bk-slideInBottom .4s cubic-bezier(.16, 1, .3, 1) both;
+}
 
-.bk-cal-tete { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.4rem; }
-.bk-mois { font-size: 1.7rem; font-weight: 500; text-transform: capitalize; }
-.bk-mois em { color: var(--bk-gris); font-style: normal; font-weight: 400; }
-.bk-nav { display: flex; gap: .4rem; }
+.bk-cal-tete { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.6rem; }
+.bk-mois { color: var(--cal-text-emphasis); font-size: 1.5rem; font-weight: 600; }
+.bk-mois em { color: var(--cal-text-subtle); font-style: normal; font-weight: 400; }
+.bk-nav { display: flex; gap: .2rem; }
 .bk-nav button {
-  width: 3.2rem; height: 3.2rem;
+  width: 2.8rem; height: 2.8rem;
   background: none; border: none; border-radius: .6rem;
-  color: var(--bk-gris); cursor: pointer;
+  color: var(--cal-text-subtle); cursor: pointer;
   display: grid; place-items: center;
-  transition: background-color .2s, color .2s;
+  transition: background-color .15s, color .15s;
 }
-.bk-nav button:hover:not(:disabled) { background: #ffffff14; color: var(--bk-texte); }
-.bk-nav button:disabled { color: var(--bk-gris-faible); cursor: default; }
+.bk-nav button:hover:not(:disabled) { background: var(--cal-bg-muted); color: var(--cal-text-emphasis); }
+.bk-nav button:disabled { opacity: .4; cursor: default; }
 
-.bk-jours, .bk-grille { display: grid; grid-template-columns: repeat(7, 1fr); gap: .6rem; }
+.bk-jours, .bk-grille { display: grid; grid-template-columns: repeat(7, 1fr); gap: .4rem; }
 .bk-jours {
-  margin-bottom: .8rem;
-  font-size: 1.1rem;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--bk-gris-faible);
+  color: var(--cal-text-subtle);
+  font-size: 1.1rem; font-weight: 500;
+  letter-spacing: .02em;
+  margin-bottom: .6rem;
   text-align: center;
+  text-transform: uppercase;
 }
 .bk-case {
   position: relative;
   aspect-ratio: 1 / 1;
-  display: grid; place-items: center;
-  border: none; border-radius: .6rem;
-  background: none;
-  color: var(--bk-gris-faible);
+  background: none; border: none; border-radius: .6rem;
+  color: var(--cal-text-subtle);
   cursor: default;
-  font: inherit;
-  font-size: 1.4rem;
-  transition: background-color .2s, color .2s;
+  display: grid; place-items: center;
+  font: inherit; font-size: 1.3rem;
+  transition: background-color .15s, color .15s;
 }
-.bk-case.est-libre { background: #ffffff14; color: var(--bk-texte); cursor: pointer; }
-.bk-case.est-libre:hover { background: #ffffff26; }
-.bk-case.est-choisi { background: var(--bk-actif); color: #0d0d0d; font-weight: 500; }
-/* Le point sous le chiffre marque aujourd'hui, comme sur la référence. */
+.bk-case.est-libre { background: var(--cal-bg-emphasis); color: var(--cal-text-emphasis); cursor: pointer; }
+.bk-case.est-libre:hover { background: var(--cal-border); }
+.bk-case.est-choisi {
+  background: var(--cal-bg-inverted);
+  color: var(--cal-text-inverted);
+  font-weight: 500;
+}
 .bk-case.est-aujourdhui::after {
   content: '';
-  position: absolute;
-  bottom: .5rem; left: 50%;
-  width: .4rem; height: .4rem;
-  margin-left: -.2rem;
-  border-radius: 50%;
-  background: currentColor;
+  position: absolute; bottom: .4rem; left: 50%;
+  width: .35rem; height: .35rem; margin-left: -.175rem;
+  border-radius: 50%; background: currentColor;
 }
-.bk-case-mois { position: absolute; top: .4rem; font-size: .9rem; letter-spacing: .04em; text-transform: uppercase; color: var(--bk-gris-faible); }
+.bk-case-mois {
+  position: absolute; top: .3rem;
+  color: var(--cal-text-subtle);
+  font-size: .85rem; letter-spacing: .02em; text-transform: uppercase;
+}
 
-.bk-creneaux-tete { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.6rem; }
-.bk-creneaux-jour { font-size: 1.5rem; }
-.bk-creneaux-jour em { color: var(--bk-gris); font-style: normal; }
-.bk-format { display: flex; background: var(--bk-fond-2); border-radius: .6rem; padding: .2rem; }
+.bk-creneaux-tete { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; }
+.bk-creneaux-jour { color: var(--cal-text-emphasis); font-size: 1.4rem; font-weight: 600; }
+.bk-creneaux-jour em { color: var(--cal-text-subtle); font-style: normal; font-weight: 400; }
+.bk-format { display: flex; background: var(--cal-bg-muted); border-radius: .6rem; padding: .2rem; }
 .bk-format button {
   background: none; border: none; border-radius: .5rem;
-  color: var(--bk-gris); cursor: pointer;
+  color: var(--cal-text-subtle); cursor: pointer;
   font: inherit; font-size: 1.2rem;
-  padding: .5rem 1rem;
-  transition: background-color .2s, color .2s;
+  padding: .4rem .9rem;
+  transition: background-color .15s, color .15s;
 }
-.bk-format button[aria-pressed='true'] { background: #ffffff1f; color: var(--bk-texte); }
+.bk-format button[aria-pressed='true'] { background: var(--cal-bg-emphasis); color: var(--cal-text-emphasis); }
 
-.bk-liste { display: flex; flex-direction: column; gap: .8rem; overflow-y: auto; max-height: 42rem; padding-right: .4rem; }
-.bk-liste::-webkit-scrollbar { width: .4rem; }
-.bk-liste::-webkit-scrollbar-thumb { background: var(--bk-bord); border-radius: 1rem; }
+.bk-liste { display: flex; flex-direction: column; gap: .6rem; overflow-y: auto; max-height: 32rem; padding-right: .6rem; }
+.bk-liste::-webkit-scrollbar { width: .5rem; }
+.bk-liste::-webkit-scrollbar-thumb { background: var(--cal-bg-emphasis); border-radius: 1rem; }
 .bk-creneau {
-  background: none;
-  border: 1px solid var(--bk-bord);
+  background: var(--cal-bg);
+  border: 1px solid var(--cal-border-subtle);
   border-radius: .8rem;
-  color: var(--bk-texte);
+  color: var(--cal-text-emphasis);
   cursor: pointer;
-  font: inherit;
-  font-size: 1.4rem;
-  padding: 1.2rem;
+  flex: none;
+  font: inherit; font-size: 1.3rem; font-weight: 500;
+  padding: .9rem;
   text-align: center;
-  transition: background-color .2s, border-color .2s;
+  transition: background-color .15s, border-color .15s;
+  /* les créneaux entrent l'un après l'autre, comme sur la référence */
+  animation: bk-fade-in-up .3s ease both;
 }
-.bk-creneau:hover { background: #ffffff14; border-color: var(--bk-bord-fort); }
-.bk-vide { color: var(--bk-gris-faible); font-size: 1.4rem; padding: 1.2rem 0; }
+.bk-creneau:hover { background: var(--cal-bg-muted); border-color: var(--cal-border-emphasis); }
+.bk-vide { color: var(--cal-text-subtle); font-size: 1.3rem; padding: 1rem 0; }
 
-@media (max-width: 991px) {
-  .bk-quand { grid-template-columns: 1fr; }
-  .bk-creneaux { border-left: none; border-top: 1px solid var(--bk-bord); }
-  .bk-liste { max-height: 26rem; }
-}
-
-/* ── Écran 3 : confirmation ─────────────────────────────────────────────── */
-.bk-confirmer { display: grid; grid-template-columns: 28rem 1fr; }
-.bk-recap { padding: 2.8rem 2.4rem; border-right: 1px solid var(--bk-bord); }
-.bk-recap-hote { color: var(--bk-gris); font-size: 1.3rem; font-weight: 500; margin-bottom: .6rem; }
-.bk-recap-titre { font-size: 2rem; font-weight: 500; margin: 0 0 2rem; }
-.bk-recap-ligne { display: flex; gap: 1rem; align-items: flex-start; margin-bottom: 1.4rem; font-size: 1.4rem; color: var(--bk-texte); }
-.bk-recap-ligne svg { flex: none; width: 1.6rem; height: 1.6rem; margin-top: .1rem; color: var(--bk-gris); }
-.bk-marque {
-  width: 3.6rem; height: 3.6rem;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #4b4b4b, #d9d9d9);
-  display: grid; place-items: center;
-  color: #0d0d0d; font-size: 1.3rem; font-weight: 700;
-  margin-bottom: 1.4rem;
-}
-.bk-form { padding: 2.8rem 2.4rem; }
-
-/* Type d'appel : deux options, la seconde ouvre le champ du numéro. */
-.bk-choix { display: flex; gap: .8rem; flex-wrap: wrap; }
+/* ── Écran 3 : confirmation ────────────────────────────────────────────── */
+.bk-confirmer { display: grid; grid-template-columns: 24rem minmax(0, 1fr); }
+.bk-form { padding: 2.4rem; }
+.bk-choix { display: flex; gap: .6rem; flex-wrap: wrap; }
 .bk-option {
-  flex: 1 1 16rem;
-  display: flex; align-items: center; gap: 1rem;
-  background: var(--bk-fond-2);
-  border: 1px solid var(--bk-bord);
+  flex: 1 1 14rem;
+  display: flex; align-items: center; gap: .8rem;
+  background: var(--cal-bg-muted);
+  border: 1px solid var(--cal-border-subtle);
   border-radius: .8rem;
-  color: var(--bk-gris);
+  color: var(--cal-text);
   cursor: pointer;
-  font: inherit; font-size: 1.4rem;
-  padding: 1.2rem 1.4rem;
+  font: inherit; font-size: 1.3rem;
+  padding: .9rem 1.2rem;
   text-align: left;
-  transition: color .2s, border-color .2s;
+  transition: border-color .15s, color .15s;
 }
-.bk-option svg { width: 1.8rem; height: 1.8rem; flex: none; }
-.bk-option:hover { color: var(--bk-texte); border-color: var(--bk-bord-fort); }
-.bk-option[aria-pressed='true'] { color: var(--bk-texte); border-color: var(--bk-actif); }
+.bk-option svg { width: 1.6rem; height: 1.6rem; flex: none; }
+.bk-option:hover { color: var(--cal-text-emphasis); border-color: var(--cal-border); }
+.bk-option[aria-pressed='true'] { border-color: var(--cal-border-emphasis); color: var(--cal-text-emphasis); }
 .bk-champ[hidden] { display: none; }
 
-@media (max-width: 991px) {
-  .bk-confirmer { grid-template-columns: 1fr; }
-  .bk-recap { border-right: none; border-bottom: 1px solid var(--bk-bord); }
-}
-
-/* ── Écran final ────────────────────────────────────────────────────────── */
-.bk-fait-corps { padding: 4.8rem 2.4rem; text-align: center; }
-.bk-coche {
+/* ── Écrans de fin : planifié, annulé ──────────────────────────────────────
+   Reprise de la page de confirmation de Cal.com : rond coloré, titre, puis un
+   tableau d'informations en deux colonnes, séparé par un filet. */
+.bk-fin-tete { padding: 3.2rem 2.4rem 2.4rem; text-align: center; border-bottom: 1px solid var(--cal-border-subtle); }
+.bk-rond {
   width: 4.8rem; height: 4.8rem;
   border-radius: 50%;
-  background: var(--bk-actif);
-  color: #0d0d0d;
   display: grid; place-items: center;
-  margin: 0 auto 2rem;
+  margin: 0 auto 1.6rem;
 }
-.bk-fait-detail { color: var(--bk-gris); font-size: 1.5rem; margin-top: 1.6rem; line-height: 1.6; }
-.bk-fait-detail strong { color: var(--bk-texte); font-weight: 500; }
+.bk-rond--ok { background: var(--cal-bg-success); color: #4ade80; }
+.bk-rond--non { background: var(--cal-bg-error); color: #f87171; }
+.bk-fin-titre { color: var(--cal-text-emphasis); font-size: 2.2rem; font-weight: 600; letter-spacing: -.02em; margin: 0; }
+.bk-fin-desc { color: var(--cal-text-subtle); font-size: 1.4rem; margin: .8rem auto 0; max-width: 42rem; }
 
-@media (max-width: 767px) {
-  .bk-corps, .bk-cal, .bk-creneaux, .bk-recap, .bk-form { padding: 2rem 1.6rem; }
-  .bk-titre { font-size: 2rem; }
-  .bk-actions { flex-direction: column-reverse; align-items: stretch; }
-  .bk-btn { width: 100%; }
+.bk-detail { padding: 2.4rem; }
+.bk-detail dl { display: grid; grid-template-columns: 12rem 1fr; gap: 1.6rem 2rem; margin: 0; }
+.bk-detail dt { color: var(--cal-text-emphasis); font-size: 1.4rem; font-weight: 500; }
+.bk-detail dd { color: var(--cal-text-emphasis); font-size: 1.4rem; margin: 0; }
+.bk-detail dd small { color: var(--cal-text-subtle); font-size: 1.4rem; }
+.bk-sec { color: var(--cal-text-subtle); }
+.bk-barre { text-decoration: line-through; }
+.bk-jeton {
+  border-radius: .4rem;
+  font-size: 1.1rem; font-weight: 500;
+  padding: .1rem .5rem;
+  margin-left: .6rem;
 }
+.bk-jeton--hote { background: #253883; color: #dde7fd; }
+.bk-jeton--invite { background: #74331b; color: #ffedd6; }
 
-/* ── Le bloc de contact, révélé après la réservation ──────────────────────
-   Replié, pas masqué : `display:none` le retirerait du flux, et le SplitText
-   du thème — qui découpe les textes au chargement — mesurerait une largeur
-   nulle. Il posait alors `width: 5px` en ligne sur chaque libellé, et le bloc
-   révélé s'affichait à un mot par ligne. Replié par max-height, il garde sa
-   largeur réelle pendant que le thème le mesure. */
-.bk-contact {
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  pointer-events: none;
+.bk-agenda {
+  border-top: 1px solid var(--cal-border-subtle);
+  margin-top: 2.4rem; padding-top: 2rem;
+  display: flex; align-items: center; justify-content: center; gap: .8rem; flex-wrap: wrap;
 }
-.bk-contact.est-visible {
-  max-height: none;
-  overflow: visible;
-  opacity: 1;
-  pointer-events: auto;
-  margin-top: 8rem;
-  animation: bk-apparait .6s ease both;
+.bk-agenda-label { color: var(--cal-text-emphasis); font-size: 1.4rem; margin-right: .4rem; }
+.bk-agenda a {
+  width: 3.4rem; height: 3.4rem;
+  background: var(--cal-bg-muted);
+  border: 1px solid var(--cal-border-subtle);
+  border-radius: .8rem;
+  color: var(--cal-text-emphasis);
+  display: grid; place-items: center;
+  font-size: 1.3rem; font-weight: 600;
+  text-decoration: none;
+  transition: background-color .15s, border-color .15s;
 }
-@keyframes bk-apparait { from { opacity: 0; transform: translateY(1.6rem) } to { opacity: 1; transform: none } }
+.bk-agenda a:hover { background: var(--cal-bg-subtle); border-color: var(--cal-border); }
 
-/* Le conteneur de la page est une grille du thème : le module prend toute la
-   largeur du contenu plutôt qu'une seule colonne. */
-.bk-holder { grid-column: 1 / -1; padding-bottom: 10rem; }
-.bk-contact-tete { margin-bottom: 4rem; }
-.bk-contact-tete .contact-hero-title { margin-bottom: 1.2rem; }
-
-/* ══ Page noire, en un seul écran ══════════════════════════════════════════
-   La page ne montre plus qu'une chose : la réservation. Le hero occupe la
-   hauteur de la fenêtre et centre la carte — plus de grand titre ni de
-   description à faire défiler avant d'arriver au calendrier. */
+/* ── La page ───────────────────────────────────────────────────────────────
+   Fond de Cal.com, carte centrée, tout dans la hauteur de la fenêtre : la page
+   ne montre que la réservation, sans titre ni description. */
 .contact-hero:has(.bk) {
-  background: #000;
-  color: #f4f4f4;
-  /* La hauteur retire le pied de page (une bande de 5,4rem sur cette page) :
-     le tout tient alors dans la fenêtre, sans un pixel à faire défiler. */
+  background: #0f0f0f;
+  color: #d4d4d4;
   min-height: calc(100svh - 5.4rem);
   display: flex;
   flex-direction: column;
@@ -340,43 +354,45 @@
 }
 .contact-hero:has(.bk) .heading,
 .contact-hero:has(.bk) .txt { color: inherit; }
-
-.bk-tete { padding-bottom: 2.4rem; }
-.bk-tete .contact-hero-text-wrap { grid-column: 1 / -1; text-align: center; }
-.bk-tete .heading { margin: 0; }
-
-.bk-holder { padding-bottom: 0; }
-
-/* ── Proportions de la référence ────────────────────────────────────────────
-   1 040 x 490 px sur un écran de 1 440 : trois colonnes, récapitulatif à
-   gauche, mois au milieu, créneaux à droite. */
-.bk { max-width: 125rem; }
-.bk-quand { grid-template-columns: 33rem minmax(0, 1fr) 34rem; }
-.bk-aside { padding: 2.8rem 2.4rem; border-right: 1px solid var(--bk-bord); }
-.bk-cal { padding: 2rem 2.4rem; }
-.bk-creneaux { padding: 2rem 2.4rem; }
-.bk-liste { max-height: 34rem; }
-
-/* Le fil des étapes disparaît de l'écran du calendrier : la référence n'a que
-   la carte, et chaque rangée gagnée est une rangée qui tient dans l'écran. */
-.bk[data-step='quand'] .bk-fil { display: none; }
+.bk-holder { grid-column: 1 / -1; }
 
 @media (max-width: 1199px) {
-  .bk-quand { grid-template-columns: minmax(0, 1fr) 30rem; }
-  .bk-aside { display: none; }
+  .bk-quand { grid-template-columns: minmax(0, 1fr) 25rem; }
+  .bk-quand .bk-aside { display: none; }
 }
 @media (max-width: 991px) {
-  .bk-quand { grid-template-columns: minmax(0, 1fr); }
+  .bk-quand, .bk-confirmer { grid-template-columns: minmax(0, 1fr); }
+  .bk-creneaux { border-left: none; border-top: 1px solid var(--cal-border-subtle); }
+  .bk-recap { border-right: none; border-bottom: 1px solid var(--cal-border-subtle); }
   .contact-hero:has(.bk) { min-height: 0; padding: 12rem 0 6rem; }
+  .bk-liste { max-height: 26rem; }
+}
+@media (max-width: 767px) {
+  .bk-corps, .bk-cal, .bk-creneaux, .bk-recap, .bk-form, .bk-detail { padding: 1.6rem; }
+  .bk-detail dl { grid-template-columns: 1fr; gap: .4rem 0; }
+  .bk-detail dt { color: var(--cal-text-subtle); margin-top: 1.2rem; }
+  .bk-actions { flex-direction: column-reverse; align-items: stretch; }
+  .bk-btn { width: 100%; }
 }
 
-/* ── Le bloc de contact, sur fond noir ─────────────────────────────────────
-   Il vient du thème en version claire : ses libellés et ses traits sont
-   repeints ici, sinon ils disparaissent sur le noir. */
+/* ── Le bloc de contact, révélé après la réservation ──────────────────────
+   Replié, pas masqué : `display:none` le retirerait du flux, et le SplitText
+   du thème — qui découpe les textes au chargement — mesurerait une largeur
+   nulle. Il posait alors `width: 5px` en ligne sur chaque libellé, et le bloc
+   révélé s'affichait à un mot par ligne. */
+.bk-contact { max-height: 0; overflow: hidden; opacity: 0; pointer-events: none; }
+.bk-contact.est-visible {
+  max-height: none; overflow: visible; opacity: 1; pointer-events: auto;
+  margin-top: 8rem;
+  animation: bk-fade-in-up .6s ease both;
+}
 .bk-contact .heading,
 .bk-contact .txt,
-.bk-contact .input-field { color: #f4f4f4; }
-.bk-contact .input-field { -webkit-text-fill-color: #f4f4f4; }
-.bk-contact .input-label { color: #ffffff8c; }
-.bk-contact .line { background-color: #ffffff29; }
+.bk-contact .input-field { color: #fafafa; }
+.bk-contact .input-field { -webkit-text-fill-color: #fafafa; }
+.bk-contact .input-label { color: #a3a3a3; }
+.bk-contact .line { background-color: #262626; }
 .bk-contact .btn { background: #fff; border-color: #fff; color: #000; }
+/* Le thème pose un texte indicatif dans chaque champ en plus du libellé au
+   dessus : invisible sur fond blanc, il doublait le libellé sur le noir. */
+.bk-contact .input-field::placeholder { color: #ffffff1f; }

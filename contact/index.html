@@ -1821,17 +1821,9 @@
       max-height: 80svh;
     }
   }
-</style></div><div class="contact-hero-wrap"><section data-init-hidden="" class="contact-hero"><div class="contact-hero-head bk-tete"><div class="w-layout-blockcontainer container grid w-container"><div id="w-node-e347e4cf-2502-25bf-221c-94541a6d1d3c-c403df47" class="contact-hero-text-wrap"><div class="contact-hero-title"><h1 class="heading h4">Book a call</h1></div></div></div></div><div class="contact-hero-body"><div class="w-layout-blockcontainer container grid w-container"><div class="bk-holder">
+</style></div><div class="contact-hero-wrap"><section data-init-hidden="" class="contact-hero"><div class="contact-hero-body"><div class="w-layout-blockcontainer container grid w-container"><div class="bk-holder">
 
 <div class="bk" id="bk" data-step="qui">
-  <div class="bk-fil">
-    <div class="bk-fil-item est-actif"><span class="bk-fil-num">1</span><span>Your details</span></div>
-    <div class="bk-fil-sep"></div>
-    <div class="bk-fil-item"><span class="bk-fil-num">2</span><span>Date &amp; time</span></div>
-    <div class="bk-fil-sep"></div>
-    <div class="bk-fil-item"><span class="bk-fil-num">3</span><span>Confirm</span></div>
-  </div>
-
   <div class="bk-ecran bk-ecran--qui"><div class="bk-corps">
     <h2 class="bk-titre">Who are we talking to?</h2>
     
@@ -1921,11 +1913,44 @@
     </form>
   </div></div>
 
-  <div class="bk-ecran bk-ecran--fait"><div class="bk-fait-corps">
-    <div class="bk-coche"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" width="26" height="26"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
-    <h2 class="bk-titre">Your call is booked</h2>
-    <p class="bk-fait-detail"><strong id="bk-fait-quand"></strong><br/><span id="bk-fait-canal"></span><br/>A confirmation goes to <strong id="bk-fait-email"></strong>.</p>
-  </div></div>
+  <div class="bk-ecran bk-ecran--fait">
+    <div class="bk-fin-tete">
+      <div class="bk-rond bk-rond--ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" width="24" height="24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+      <h2 class="bk-fin-titre">This meeting is scheduled</h2>
+      <p class="bk-fin-desc">We sent an email with a calendar invitation with the details to everyone.</p>
+    </div>
+    <div class="bk-detail">
+      <dl>
+        <dt>What</dt><dd id="bk-quoi"></dd>
+        <dt>When</dt><dd><span id="bk-quand-d"></span><br/><span id="bk-quand-h"></span> <small id="bk-quand-tz"></small></dd>
+        <dt>Who</dt><dd id="bk-qui"></dd>
+        <dt>Where</dt><dd id="bk-ou"></dd>
+      </dl>
+      <div class="bk-agenda">
+        <span class="bk-agenda-label">Add to calendar</span>
+        <a id="bk-cal-google" href="#" target="_blank" rel="noopener" title="Google Calendar" aria-label="Google Calendar">G</a>
+        <a id="bk-cal-outlook" href="#" target="_blank" rel="noopener" title="Outlook" aria-label="Outlook">O</a>
+        <a id="bk-cal-office" href="#" target="_blank" rel="noopener" title="Microsoft 365" aria-label="Microsoft 365">M</a>
+        <a id="bk-cal-ics" href="#" download="harborview-call.ics" title="Download .ics" aria-label="Download .ics">ICS</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="bk-ecran bk-ecran--annule">
+    <div class="bk-fin-tete">
+      <div class="bk-rond bk-rond--non"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" width="22" height="22"><path d="M6 6l12 12M18 6L6 18"/></svg></div>
+      <h2 class="bk-fin-titre">This event is cancelled</h2>
+    </div>
+    <div class="bk-detail">
+      <dl>
+        <dt>Cancelled by</dt><dd id="bk-a-par" class="bk-sec">—</dd>
+        <dt>What</dt><dd id="bk-a-quoi">15 Min Call between Harborview Partners and you</dd>
+        <dt>When</dt><dd class="bk-barre"><span id="bk-a-quand-d"></span><br/><span id="bk-a-quand-h"></span> <small class="bk-sec" id="bk-a-quand-tz"></small></dd>
+        <dt>Who</dt><dd>Harborview Partners <span class="bk-jeton bk-jeton--hote">Host</span><br/><small class="bk-sec">contact@harborviewpartners.com</small><br/><br/><span id="bk-a-qui">—</span> <span class="bk-jeton bk-jeton--invite">Guest</span><br/><small class="bk-sec" id="bk-a-mail">—</small></dd>
+      </dl>
+    </div>
+  </div>
+
 </div>
 
 <div class="bk-contact" id="bk-contact">

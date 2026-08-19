@@ -379,43 +379,57 @@ widget) est partie avec lui, et reviendra avec lui.
 
 ## Réserver un appel (/contact)
 
-La page de contact est devenue une prise de rendez-vous. Trois écrans dans une
-même carte sombre — `assets/booking.css`, `assets/booking.js` :
+La page de contact est devenue une prise de rendez-vous, reprise du booker de
+Cal.com — `assets/booking.css`, `assets/booking.js`.
 
-1. **Qui appelle** : nom, société, et le service concerné, en pastilles plutôt
-   qu'en liste déroulante — tout est visible d'un coup d'œil.
-2. **Quand** : trois colonnes, comme la référence — récapitulatif à gauche, mois
-   au milieu, créneaux à droite. Mois navigable, jours passés éteints, jour
-   choisi en blanc, point sous la date du jour, bascule 12 h / 24 h. La carte
-   fait 1 042 × 478 px sur un écran de 1 440, aux proportions de Cal.com.
-3. **Comment** : récapitulatif à gauche (hôte, durée, date, canal, fuseau,
-   service), formulaire à droite — nom, e-mail, notes, et le choix entre Google
-   Meet et appel téléphonique. Le second ouvre le champ du numéro.
+**La palette n'est pas approchée à l'œil.** Elle est relevée dans la feuille de
+Cal.com (sélecteur `.dark`) et reportée telle quelle : `#0f0f0f` le fond,
+`#171717` les surfaces, `#262626` les filets, `#404040` les jours libres,
+`#d4d4d4` le texte, `#fafafa` l'emphase, `#4d4d4d` les bordures de champ,
+`#285231` le vert du succès, `#772522` le rouge de l'annulation. Les images-clés
+d'animation sont les leurs aussi (`fadeIn`, `fade-in-up`, `slideInBottom`), et la
+police est Inter, servie depuis `/cdn` comme les autres.
 
-**Un seul écran, sur fond noir.** La page ne montre que la réservation : titre
-« Book a call », la carte, rien à faire défiler. Le hero prend
-`calc(100svh - 5.4rem)` — la fenêtre moins la bande du pied de page — si bien que
-le document fait exactement la hauteur de la fenêtre. Vérifié à 1440 × 900,
-1280 × 800, 1920 × 1080 et 1366 × 768 : aucun débordement, à aucune des trois
-étapes.
+Trois écrans, puis deux fins :
 
-**La liste des créneaux porte `data-lenis-prevent`.** Sans lui, le défilement
-lissé du thème capte la molette et la liste reste figée — c'est la convention du
-thème pour tout bloc qui défile en interne.
+1. **Qui appelle** : nom, société, service — en pastilles.
+2. **Quand** : trois colonnes, événement à gauche, mois au milieu, créneaux à
+   droite. Carte de 817 × 410 px sur un écran de 1 440.
+3. **Comment** : récapitulatif à gauche, formulaire à droite — nom, e-mail,
+   notes, et le choix entre Google Meet et appel téléphonique.
+4. **Planifié** : la carte de confirmation de Cal.com — rond vert, puis
+   *What / When / Who / Where*, jeton « Host », et l'ajout au calendrier.
+5. **Annulé** : la même carte en rouge, mentions barrées, jetons « Host » et
+   « Guest ». Sans serveur, aucune réservation n'existe : cet écran est une
+   maquette, atteignable par `/contact?state=cancelled`.
 
-Les services proposés suivent le métier : site, application ou produit web,
-automatisation, gestion et exploitation, marque et contenu, acquisition,
-maintenance — et « Not sure yet » pour ceux qui viennent en discuter.
+**Les liens d'ajout au calendrier sont réels** : Google, Outlook, Microsoft 365
+et un fichier `.ics` en `data:` — tout se fabrique côté client, sans serveur.
 
 **La disponibilité tient dans un seul bloc**, `DISPO` en tête de `booking.js` :
 9 h à 22 h, créneaux de 15 minutes, 2 heures de préavis, 60 jours d'horizon, tous
 les jours de la semaine (`joursOuvres: null` ; mettre `[1,2,3,4,5]` pour s'en
-tenir aux jours ouvrés).
+tenir aux jours ouvrés). Les services proposés suivent le métier : site,
+application ou produit web, automatisation, gestion et exploitation, marque et
+contenu, acquisition, maintenance, et « Not sure yet ».
 
 **Rien n'est envoyé nulle part.** Le site est statique : la confirmation affiche
 le récapitulatif et découvre le bloc de contact, mais aucune réservation n'est
 enregistrée et aucun e-mail ne part. Le jour où une vraie prise de rendez-vous
 existera, c'est `envoyer()` qu'il faudra brancher — tout le reste est en place.
+
+**Ce qui n'est pas repris de Cal.com**, à dessein : le mobilier de leur produit —
+« Retour aux réservations », le pied « Cal.com », « Signaler la réservation », la
+bascule de superposition d'agenda. Sur ce site, ces éléments ne mèneraient nulle
+part.
+
+**Un seul écran.** La page ne montre que la réservation : pas de titre, pas de
+description, rien à faire défiler. Le hero prend `calc(100svh - 5.4rem)` — la
+fenêtre moins la bande du pied de page. Vérifié à 1440 × 900, 1280 × 800,
+1920 × 1080 et sur téléphone : aucun débordement, ni vertical ni latéral.
+
+**La liste des créneaux porte `data-lenis-prevent`.** Sans lui, le défilement
+lissé du thème capte la molette et la liste reste figée.
 
 **Le bloc de contact est replié, pas masqué.** `display:none` le retirerait du
 flux, et le SplitText du thème — qui découpe les textes au chargement —

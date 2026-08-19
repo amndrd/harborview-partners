@@ -169,12 +169,15 @@
         liste.innerHTML = '<p class="bk-vide">Nothing left on this day.</p>';
         return;
       }
-      libres.forEach(function (t) {
+      libres.forEach(function (t, i) {
         var b = document.createElement('button');
         b.type = 'button';
         b.className = 'bk-creneau';
         b.textContent = heure(t);
         b.dataset.heure = t.toISOString();
+        // les vingt premiers entrent l'un après l'autre ; au-delà, le retard
+        // se verrait plus qu'il n'aiderait
+        b.style.animationDelay = Math.min(i, 20) * 18 + 'ms';
         liste.appendChild(b);
       });
     }
@@ -263,19 +266,70 @@
       envoyer();
     });
 
-    /* Rien ne part vers un serveur : le site est statique. On affiche le
-       récapitulatif et l'on découvre le bloc de contact, comme demandé. */
+    /* ── Fin de parcours ───────────────────────────────────────────────
+       Rien ne part vers un serveur : le site est statique. On remplit la carte
+       de confirmation — la même que celle de Cal.com : quoi, quand, qui, où —
+       puis on découvre le bloc de contact. Les liens d'ajout au calendrier,
+       eux, sont réels : ils se fabriquent entièrement côté client. */
+    function horodate(d) {
+      return d.getUTCFullYear() +
+        ('0' + (d.getUTCMonth() + 1)).slice(-2) + ('0' + d.getUTCDate()).slice(-2) + 'T' +
+        ('0' + d.getUTCHours()).slice(-2) + ('0' + d.getUTCMinutes()).slice(-2) + '00Z';
+    }
+
+    function liensAgenda(debut, fin, titre, detail, lieu) {
+      var d1 = horodate(debut), d2 = horodate(fin);
+      var e = encodeURIComponent;
+      var g = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + e(titre) +
+              '&dates=' + d1 + '/' + d2 + '&details=' + e(detail) + '&location=' + e(lieu);
+      var commun = '/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent' +
+                   '&subject=' + e(titre) + '&startdt=' + e(debut.toISOString()) +
+                   '&enddt=' + e(fin.toISOString()) + '&body=' + e(detail) + '&location=' + e(lieu);
+      var ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Harborview Partners//Booking//EN',
+                 'BEGIN:VEVENT', 'UID:' + Date.now() + '@harborviewpartners.com',
+                 'DTSTAMP:' + horodate(new Date()), 'DTSTART:' + d1, 'DTEND:' + d2,
+                 'SUMMARY:' + titre, 'DESCRIPTION:' + detail, 'LOCATION:' + lieu,
+                 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+      return {
+        google: g,
+        outlook: 'https://outlook.live.com' + commun,
+        office: 'https://outlook.office.com' + commun,
+        ics: 'data:text/calendar;charset=utf-8,' + e(ics)
+      };
+    }
+
     function envoyer() {
       var fin = new Date(etat.creneau.getTime() + DISPO.duree * 60000);
-      q('#bk-fait-quand').textContent = dateLongue(etat.creneau) + ', ' +
-        heure(etat.creneau) + ' – ' + heure(fin) + ' (' + fuseau + ')';
-      q('#bk-fait-canal').textContent = etat.canal === 'tel'
-        ? 'We will call you on ' + etat.tel + '.'
-        : 'A Google Meet link goes out with the confirmation.';
-      q('#bk-fait-email').textContent = etat.email;
+      var titre = '15 Min Call between Harborview Partners and ' + etat.nom;
+      var lieu = etat.canal === 'tel' ? 'Phone call — ' + etat.tel : 'Google Meet';
+
+      q('#bk-quoi').textContent = titre;
+      q('#bk-quand-d').textContent = dateLongue(etat.creneau);
+      q('#bk-quand-h').textContent = heure(etat.creneau) + ' – ' + heure(fin);
+      q('#bk-quand-tz').textContent = '(' + fuseau + ')';
+      q('#bk-qui').innerHTML =
+        'Harborview Partners <span class="bk-jeton bk-jeton--hote">Host</span>' +
+        '<br/><small class="bk-sec">contact@harborviewpartners.com</small>' +
+        '<br/><br/>' + texte(etat.nom) + (etat.societe ? ' <span class="bk-sec">· ' + texte(etat.societe) + '</span>' : '') +
+        '<br/><small class="bk-sec">' + texte(etat.email) + '</small>';
+      q('#bk-ou').textContent = lieu;
+
+      var liens = liensAgenda(etat.creneau, fin, titre,
+        'Booked from harborviewpartners.com — ' + etat.service, lieu);
+      q('#bk-cal-google').href = liens.google;
+      q('#bk-cal-outlook').href = liens.outlook;
+      q('#bk-cal-office').href = liens.office;
+      q('#bk-cal-ics').href = liens.ics;
+
       allerA('fait');
       var contact = document.getElementById('bk-contact');
       if (contact) contact.classList.add('est-visible');
+    }
+
+    function texte(v) {
+      return String(v).replace(/[&<>"]/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+      });
     }
 
     /* ── Navigation entre écrans ───────────────────────────────────────── */
@@ -300,7 +354,22 @@
     if (f2) f2.textContent = fuseau;
     dessineMois();
     dessineCreneaux();
-    allerA('qui');
+
+    /* Écran d'annulation : sans serveur, aucune réservation n'existe vraiment.
+       Il est donc une maquette, atteignable par ?state=cancelled — de quoi
+       juger le rendu sans avoir à inventer un parcours. */
+    if (/[?&]state=cancelled/.test(location.search)) {
+      var quand = new Date();
+      quand.setDate(quand.getDate() + 2);
+      quand.setHours(9, 30, 0, 0);
+      var fin2 = new Date(quand.getTime() + DISPO.duree * 60000);
+      q('#bk-a-quand-d').textContent = dateLongue(quand);
+      q('#bk-a-quand-h').textContent = heure(quand) + ' – ' + heure(fin2);
+      q('#bk-a-quand-tz').textContent = '(' + fuseau + ')';
+      allerA('annule');
+    } else {
+      allerA('qui');
+    }
   }
 
   /* ── Accrochage ──────────────────────────────────────────────────────── */
