@@ -191,66 +191,30 @@ Un serveur est **nécessaire** (pas d'ouverture en `file://`) : le site utilise 
 modules ES, des transitions de page Barba.js qui récupèrent les pages en XHR, et
 des chemins absolus depuis la racine.
 
-## Chatbot
+## Chatbot (mis de côté)
 
-Badge en bas à droite qui s'ouvre en carte de discussion, sur les 40 pages.
-Répond en streaming via l'API Claude (modèle `claude-haiku-4-5`).
+Un assistant Claude en streaming — badge en bas à droite, carte de discussion sur
+les 40 pages — a vécu ici jusqu'au commit `96f427d`. Il est **retiré du site**,
+pas jeté : plus rien ne s'affiche, aucun point de terminaison n'écoute, et
+`ANTHROPIC_API_KEY` ne sert plus à rien.
+
+| Où le retrouver | Quoi |
+|-----------------|------|
+| Branche `chatbot-mis-de-cote` | Le dépôt entier au dernier commit qui l'embarque — le plus simple pour relire le code tel qu'il tournait. |
+| Commits `8c97c3d`, `c915ddd`, `f7b0477` | Le retrait en trois temps : le balisage des 40 pages, `assets/chat-widget.{css,js}`, puis `api/` + `netlify/functions/` + la configuration des hébergeurs. |
+
+Pour le remettre, révoquer les trois dans l'ordre inverse :
 
 ```bash
-ANTHROPIC_API_KEY=sk-ant-... node serve.mjs
+git revert f7b0477 c915ddd 8c97c3d
 ```
 
-Sans la variable, le site fonctionne normalement et le chatbot répond
-« The assistant is not configured yet. » — rien d'autre ne casse.
-
-**La clé ne doit jamais toucher le navigateur.** Elle serait lisible dans les
-sources par n'importe quel visiteur, et utilisable à volonté à vos frais. Le
-widget appelle donc `/api/chat` sur votre propre domaine ; ce point de
-terminaison seul détient la clé et relaie vers Anthropic.
-
-| Fichier | Rôle |
-|---------|------|
-| `api/_lib/persona.mjs` | **Le seul fichier à éditer** : modèle, prompt système, faits sur l'entreprise, plafonds. |
-| `api/_lib/chat-core.mjs` | Relais vers l'API Claude, validation des entrées, limite de débit, transformation du flux SSE. |
-| `api/chat.mjs` | Point d'entrée serverless (Vercel/Netlify). |
-| `netlify/functions/chat.mjs` | Renvoi vers le précédent, pour la convention de dossier de Netlify. |
-| `assets/chat-widget.css` / `.js` | Le badge et la carte. Le message d'accueil est la constante `GREETING` en tête du `.js`. |
-| `serve.mjs` | Sert `/api/chat` en développement, avec la même logique. |
-
-Le préfixe `_` de `api/_lib` n'est pas décoratif : Vercel transforme en route
-HTTP chaque fichier de `/api` sauf ceux dont le nom commence par un souligné.
-`serve.mjs` et `netlify.toml` refusent en plus de servir `/api/**` en statique,
-sans quoi le prompt système serait téléchargeable.
-
-**Adapter les réponses** — tout est dans `api/_lib/persona.mjs` :
-
-- `CHAT_CONFIG.model` : `claude-haiku-4-5` (1 $/5 $ par million de tokens),
-  `claude-sonnet-5` (3 $/15 $) ou `claude-opus-5` (5 $/25 $).
-- `COMPANY_FACTS` : la seule source de l'assistant sur l'entreprise —
-  positionnement, clientèle, les trois pôles (présence en ligne, automatisation,
-  gestion), la méthode en quatre étapes, les engagements, les technologies et ce
-  que Harborview ne fait pas. Tout ce qui n'y figure pas, l'assistant dit
-  l'ignorer et renvoie vers `/contact`. **Les chiffres (délais, garanties) sont
-  des valeurs plausibles à valider**, pas des engagements vérifiés : relisez-les
-  avant l'ouverture au public, l'assistant les présente comme des faits. Aucune
-  adresse e-mail ni téléphone n'y figure volontairement — mieux vaut renvoyer
-  vers `/contact`, toujours juste, qu'une coordonnée inexistante.
-- `buildSystemPrompt()` : le ton, le périmètre et les interdits (jamais de prix
-  ni de délai ferme, pas de conseil juridique ou douanier, hors-sujet refusé).
-
-**Déployer** — un seul réglage dans les deux cas : la variable d'environnement
-`ANTHROPIC_API_KEY`.
-
-| Plateforme | Ce qui est déjà en place | Ce qu'il reste à faire |
-|------------|--------------------------|------------------------|
-| Vercel | `vercel.json`, `api/chat.mjs` exposé sur `/api/chat` | Ajouter `ANTHROPIC_API_KEY` dans Settings → Environment Variables |
-| Netlify | `netlify.toml` (redirection `/api/chat`, blocage du reste) | Ajouter `ANTHROPIC_API_KEY` dans Site settings → Environment variables |
-
-**Garde-fous** — le point de terminaison est public : 2 000 caractères par
-message, 24 messages d'historique, 1 024 tokens par réponse, 20 requêtes par
-minute et par IP. Ce dernier compteur vit en mémoire : il protège un serveur
-unique, mais en serverless chaque instance a la sienne — pour un vrai plafond,
-utilisez celui de la plateforme (Vercel Firewall, Netlify rate limiting).
+Restent alors trois choses que le retrait n'a pas pu faire à votre place :
+rétablir `ANTHROPIC_API_KEY` chez l'hébergeur (Vercel : Settings → Environment
+Variables ; Netlify : Site settings → Environment variables), relire les chiffres
+de `api/_lib/persona.mjs` — délais et garanties y sont des valeurs plausibles à
+valider, que l'assistant présente comme des faits —, et remettre cette section à
+jour.
 
 ## Bandeau cookies
 
@@ -288,12 +252,10 @@ remplaçant le contenu sans recharger la page.
 | `assets/cookie-consent.css` | La bulle, le bandeau, le panneau de préférences. |
 | `assets/cookie.svg` | L'icône de la bulle. |
 
-**Cohabitation avec le chatbot** — les deux visent le coin inférieur droit. Le
-bandeau s'efface en fondu tant que la carte du chat est ouverte, via une classe
-`.hv-chat-open` posée sur `<html>` par `chat-widget.js`. Le passage par une classe
-racine n'est pas un détour : `#cookie-consent` précède `.chat-widget` dans le HTML
-et les combinateurs de frères ne regardent qu'en avant — aucun sélecteur ne peut
-remonter du chat vers le bandeau.
+**Le coin inférieur droit est à lui seul** depuis le retrait du
+[chatbot](#chatbot-mis-de-côté), qui le visait aussi. La règle qui effaçait le
+bandeau pendant une conversation (`.hv-chat-open`, posée sur `<html>` par le
+widget) est partie avec lui, et reviendra avec lui.
 
 ## Ce que contient la copie
 
