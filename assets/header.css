@@ -16,7 +16,7 @@
                             [content-start] … [content-end]
                             minmax(var(--padding-inline), 1fr) [full-width-end];
 
-   Le retrait visible du logo et du bouton « Work with us » vaut donc gouttière
+   Le retrait visible du logo et du bouton « Book a call » vaut donc gouttière
    + gap, soit exactement --container--padding. On le réduit sur le seul
    conteneur de l'en-tête, pour ne pas déplacer la grille du reste des pages.
 
@@ -70,7 +70,7 @@
 /* ── La barre reste à l'écran ───────────────────────────────────────────────
    Le thème escamotait l'en-tête dès qu'on descendait : `.on-hide`, posée au
    défilement vers le bas et retirée en remontant, le faisait glisser de
-   -101 %. Logo et bouton « Work with us » partaient avec lui, et la bascule
+   -101 %. Logo et bouton « Book a call » partaient avec lui, et la bascule
    des onglets vers le bouton Menu — qui, elle, existait déjà — se jouait hors
    champ, invisible.
 

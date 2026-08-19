@@ -56,7 +56,7 @@ webclips 180/192/512, avatar `hp-avt`, et l'image de partage `OG.jpg`.
 - **Bandeau de news** : les liens « Carbon Calculator » et « Live Tracking Portal »
   ont été retirés des 60 pages (bloc `.related-news-links`).
 - **Navigation** : les six onglets forment une rangée horizontale posée sur l'axe
-  du bouton « Work with us ». Le conteneur de l'en-tête ayant exactement la
+  du bouton « Book a call ». Le conteneur de l'en-tête ayant exactement la
   hauteur du bouton, `top:0` + `bottom:0` + `align-items:center` suffisent à les
   aligner : aucun décalage à régler, et le centre tombe au pixel près de 768 à
   1920 px. À droite, la rangée s'arrête une gouttière avant le bouton
@@ -86,7 +86,7 @@ qu'il fallait laisser dégagée à droite.
 
 ## La barre au défilement
 
-La rangée ne bouge plus : logo à gauche, bouton « Work with us » à droite, aux
+La rangée ne bouge plus : logo à gauche, bouton « Book a call » à droite, aux
 mêmes places du haut de la page au bas. Ce qui change entre les deux, c'est le
 milieu.
 
