@@ -66,3 +66,98 @@
     padding-top: 3.8rem; /* le thème pose 1.5rem */
   }
 }
+
+/* ── La barre reste à l'écran ───────────────────────────────────────────────
+   Le thème escamotait l'en-tête dès qu'on descendait : `.on-hide`, posée au
+   défilement vers le bas et retirée en remontant, le faisait glisser de
+   -101 %. Logo et bouton « Work with us » partaient avec lui, et la bascule
+   des onglets vers le bouton Menu — qui, elle, existait déjà — se jouait hors
+   champ, invisible.
+
+   La classe reste posée (le thème s'en sert ailleurs), seuls ses effets sont
+   annulés. Le sélecteur est plus spécifique que `.header.on-hide` à dessein :
+   la règle d'origine vit dans un <style> embarqué en fin de corps, donc après
+   cette feuille — à spécificité égale, c'est elle qui l'emporterait. */
+.body-inner .header.on-hide {
+  transform: none;
+  pointer-events: auto;
+}
+
+/* ── LinkedIn à gauche, Menu à droite ───────────────────────────────────────
+   Les deux blocs sont placés par identifiant dans la feuille du thème
+   (`#w-node-…`, spécificité d'un id) : les échanger demande de reprendre les
+   mêmes sélecteurs. Ces identifiants sont ceux du composant d'en-tête, donc
+   identiques sur les 40 pages.
+
+   Les deux plages sont traitées séparément, et surtout bornées en bas : sous
+   768 px le thème range le bouton Menu au bord droit (`5/-2`) et masque le
+   bloc LinkedIn. Une règle non bornée écraserait ce placement — cette feuille
+   étant chargée après celle du thème, elle gagne à spécificité égale. */
+@media screen and (min-width: 992px) {
+  #w-node-_3d3962a8-36f0-9a73-787b-7f85fa5409c7-e7cf7e47 {  /* .header-menu */
+    grid-area: 1 / 12 / 2 / 14;
+  }
+  #w-node-_4848b2c1-b408-8d92-26dc-7e44793159b7-e7cf7e47 {  /* .header-linkedin */
+    grid-area: 1 / 6 / 2 / 9;
+  }
+}
+@media screen and (min-width: 768px) and (max-width: 991px) {
+  #w-node-_3d3962a8-36f0-9a73-787b-7f85fa5409c7-e7cf7e47 {
+    grid-column: 6 / 8;
+  }
+  #w-node-_4848b2c1-b408-8d92-26dc-7e44793159b7-e7cf7e47 {
+    grid-column: 4 / 6;
+  }
+}
+
+/* ── Bascule des onglets vers le bouton Menu ────────────────────────────────
+   Le mécanisme est celui du thème : `show-menu` (haut de page) fait descendre
+   le libellé « Menu » hors de son masque et remonter les onglets dans le leur ;
+   au défilement, la classe tombe et les deux repartent en sens inverse. Tout
+   partait cependant au même instant, si bien que le bouton Menu arrivait
+   pendant que les onglets sortaient encore. On échelonne, sans toucher aux
+   transformations : seuls les délais sont posés ici, et les transitions du
+   thème (`transform .4s`) vivent dans sa feuille, chargée avant celle-ci. */
+.header-menu-list .header-link {
+  transition-delay: var(--d, 0ms);
+}
+.header-menu-list .header-link-wrap:nth-child(1) .header-link { --d: 0ms }
+.header-menu-list .header-link-wrap:nth-child(2) .header-link { --d: 22ms }
+.header-menu-list .header-link-wrap:nth-child(3) .header-link { --d: 44ms }
+.header-menu-list .header-link-wrap:nth-child(4) .header-link { --d: 66ms }
+.header-menu-list .header-link-wrap:nth-child(5) .header-link { --d: 88ms }
+.header-menu-list .header-link-wrap:nth-child(6) .header-link { --d: 110ms }
+
+/* Au défilement : les onglets s'en vont en cascade, le bouton Menu ne descend
+   qu'ensuite. */
+.header .header-menu-toggle-dots-inner,
+.header .header-menu-toggle-text-inner {
+  transition-delay: 190ms;
+}
+
+/* Au retour en haut : l'ordre s'inverse — le bouton Menu s'efface d'abord, les
+   onglets reviennent derrière lui, toujours en cascade. */
+.header.show-menu .header-menu-toggle-dots-inner,
+.header.show-menu .header-menu-toggle-text-inner {
+  transition-delay: 0ms;
+}
+.header.show-menu .header-menu-list .header-link {
+  transition-delay: calc(160ms + var(--d, 0ms));
+}
+
+/* ── Apparition du bloc LinkedIn ────────────────────────────────────────────
+   Le thème ne lui donnait qu'un fondu d'opacité, qui se confondait avec le
+   reste. Il monte maintenant de quelques pixels en arrivant, après les
+   onglets. La translation porte sur le bloc lui-même et non sur son contenu :
+   l'intérieur est un bandeau défilant (`data-marquee`) dont la transformation
+   est pilotée par le thème. La transition est redéclarée en entier — celle du
+   thème (`opacity .3s`) est une propriété raccourcie, qui remettrait le
+   transform hors du champ de l'animation. */
+.header-linkedin {
+  transform: translateY(.7rem);
+  transition: opacity .35s, transform .55s;
+}
+.header.on-scroll .header-linkedin {
+  transform: none;
+  transition-delay: 200ms;
+}

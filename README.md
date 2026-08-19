@@ -63,6 +63,10 @@ webclips 180/192/512, avatar `hp-avt`, et l'image de partage `OG.jpg`.
   (`right:22rem`, en rem donc proportionnel). Elle n'est rendue visible qu'à
   partir de 992 px, où le thème pose `show-menu` sur l'en-tête ; en dessous c'est
   le menu déroulant qui sert, et sous 768 px le thème la passe en `display:none`.
+- **La barre reste à l'écran** au défilement, avec le logo et le bouton « Work
+  with us » à leur place. Le thème l'escamotait (`.on-hide`, translation de
+  -101 % dès qu'on descendait) ; la classe reste posée, seuls ses effets sont
+  annulés dans `assets/header.css`. Voir [la barre au défilement](#la-barre-au-défilement).
 - **Hero** : le bloc de contenu (label, titre, description, boutons) prend toute
   la largeur (`grid-column:1/-1`) et se centre — mesuré à 1440 px, les quatre
   éléments ont leur centre à 720 px. La description tient sur deux lignes :
@@ -79,6 +83,54 @@ Le bloc a longtemps été calé à gauche, pour deux raisons qui ont disparu : l
 titre à mot cyclé, dont la largeur figée sur le mot le plus long faisait dériver
 le texte visible jusqu'à ~80 px selon le mot affiché, et la sphère de points,
 qu'il fallait laisser dégagée à droite.
+
+## La barre au défilement
+
+La rangée ne bouge plus : logo à gauche, bouton « Work with us » à droite, aux
+mêmes places du haut de la page au bas. Ce qui change entre les deux, c'est le
+milieu.
+
+**Onglets → bouton Menu.** Le mécanisme est celui du thème et il existait déjà :
+`show-menu`, posée en haut de page, fait descendre le libellé « Menu » hors de
+son masque et remonter les onglets dans le leur ; passé ~80 px la classe tombe et
+les deux repartent en sens inverse. Comme l'en-tête s'escamotait, cette bascule
+se jouait hors champ. Elle est maintenant visible, et échelonnée : les six
+onglets partent en cascade (22 ms d'écart), le bouton Menu ne descend qu'ensuite
+(190 ms). Au retour en haut, l'ordre s'inverse — le Menu s'efface d'abord, les
+onglets reviennent derrière lui.
+
+**Le bloc LinkedIn** apparaît au même moment (le thème ne lui donnait qu'un fondu
+d'opacité ; il monte maintenant de 0,7 rem en arrivant, 200 ms après les onglets).
+La translation porte sur le bloc et non sur son contenu : l'intérieur est un
+bandeau défilant piloté par le thème.
+
+**LinkedIn à gauche, Menu à droite.** Les deux blocs sont placés par identifiant
+dans la feuille du thème (`#w-node-…`) : les échanger demande de reprendre les
+mêmes sélecteurs, ce que fait `header.css` — bornés par plage, car sous 768 px le
+thème range déjà le Menu au bord droit et masque LinkedIn.
+
+**La couleur suit ce qui passe dessous** — `assets/header-contrast.js`. Une barre
+qui reste pose un problème que le thème n'avait pas à traiter : le texte doit
+rester lisible sur tout ce qui défile derrière. Sa classe `on-dark` était calée
+sur des repères pensés pour un en-tête escamotable, et le résultat se
+désaccordait (mesuré sur l'accueil : texte blanc sur section blanche vers
+2 000 px, texte sombre sur fond noir vers 3 500 et 4 000 px).
+
+Le test de survol ne suffit pas à trancher : à 4 000 px, ce qui peint le noir
+derrière la barre est une image en `pointer-events: none`, invisible à
+`elementsFromPoint`. Le script regarde donc ce qui est **réellement peint** —
+fonds de couleur, images, vidéos, canvas — et les compose d'arrière en avant
+comme le ferait le navigateur, en échantillonnant chaque média sur la seule bande
+qui passe derrière la barre. Un dégradé moyenné en entier donnerait un gris qui
+ne correspond à rien de ce qu'on voit à cette hauteur ; et une couche à demi
+transparente n'est ni opaque ni absente, elle se compose. La classe posée est
+celle du thème, si bien que tout son habillage suit sans une ligne de CSS de plus.
+
+Vérifié en masquant la barre et en mesurant la luminance réelle de la rangée :
+27 positions tous les 250 px sur l'accueil, plus 5 autres pages, sans un seul
+écart texte/fond insuffisant. Coût négligeable — 18 surfaces recensées sur
+l'accueil, 2 croisent la barre à un instant donné, 121 images/s en défilement
+continu.
 
 ## Titre du hero (accueil)
 
@@ -311,7 +363,7 @@ widget) est partie avec lui, et reviendra avec lui.
 | `app/`     | L'application custom du site (Vite/Rolldown) : Three.js, GSAP, Barba.js, Lenis, Swiper, curseur custom — 34 chunks |
 | `vendor/`  | jQuery et la librairie Finsweet Attributes (47 chunks) |
 | `images/ocean/` | Textures de la scène Three.js de l'accueil |
-| `assets/`  | Les ajouts maison : `hero-dots.js` (fond animé du hero), `hero-title-reveal.js` (apparition du titre), `header.css` et `logo-glass.css` (barre et marque), le bandeau cookies (`cookie-consent.*`, `cookie.svg`) |
+| `assets/`  | Les ajouts maison : `hero-dots.js` (fond animé du hero), `hero-title-reveal.js` (apparition du titre), `header.css` et `header-contrast.js` (barre de navigation), `logo-glass.css` (marque), le bandeau cookies (`cookie-consent.*`, `cookie.svg`) |
 | `background/` | `sphere.html` — la sphère de points qui a occupé ce fond entre le globe et l'onde ; autonome et réglable, plus câblée dans le site |
 | `serve.mjs` | Serveur statique (URLs propres, `Range` pour les vidéos) |
 
