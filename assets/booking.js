@@ -115,7 +115,6 @@
       if (!ok) return;
       etat.nom = nom.value.trim();
       etat.societe = q('#bk-societe').value.trim();
-      q('#bk-nom-2').value = etat.nom;
       allerA('quand');
     });
 
@@ -195,12 +194,19 @@
       choisitJour(new Date(b.dataset.jour));
     });
 
+    /* Le créneau se marque d'abord, la carte tourne ensuite : sans ce délai,
+       le clic passe à l'écran suivant avant que l'œil ait vu ce qui a été
+       choisi. 320 ms, le temps d'un regard. */
     q('#bk-liste').addEventListener('click', function (e) {
       var b = e.target.closest('.bk-creneau');
-      if (!b) return;
+      if (!b || b.classList.contains('est-choisi')) return;
+      [].forEach.call(el.querySelectorAll('.bk-creneau'), function (x) {
+        x.classList.remove('est-choisi');
+      });
+      b.classList.add('est-choisi');
       etat.creneau = new Date(b.dataset.heure);
       remplitRecap();
-      allerA('confirmer');
+      setTimeout(function () { allerA('confirmer'); }, 320);
     });
 
     q('#bk-prec').addEventListener('click', function () {
@@ -253,13 +259,11 @@
     q('#bk-retour').addEventListener('click', function () { allerA('quand'); });
 
     q('#bk-confirmer').addEventListener('click', function () {
-      var email = q('#bk-email'), nom = q('#bk-nom-2'), tel = q('#bk-tel');
+      var email = q('#bk-email'), tel = q('#bk-tel');
       var ok = true;
-      ok = marqueFaute(nom, !nom.value.trim()) && ok;
       ok = marqueFaute(email, !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.value.trim())) && ok;
       if (etat.canal === 'tel') ok = marqueFaute(tel, tel.value.trim().length < 6) && ok;
       if (!ok) return;
-      etat.nom = nom.value.trim();
       etat.email = email.value.trim();
       etat.notes = q('#bk-notes').value.trim();
       etat.tel = tel.value.trim();

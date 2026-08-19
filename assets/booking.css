@@ -467,3 +467,10 @@
 .body-inner:has(.bk) .header .hv-logo-name,
 .body-inner:has(.bk) .header .header-menu-toggle { color: #fafafa; }
 .body-inner:has(.bk) .header .header-menu-toggle-dot { background-color: #fafafa; }
+
+/* Le créneau retenu, le temps que la carte tourne. */
+.bk-creneau.est-choisi {
+  background: var(--cal-bg-inverted);
+  border-color: var(--cal-bg-inverted);
+  color: var(--cal-text-inverted);
+}

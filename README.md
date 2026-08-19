@@ -409,9 +409,12 @@ Trois écrans, puis deux fins :
 
 1. **Qui appelle** : nom, société, service — en pastilles.
 2. **Quand** : trois colonnes, événement à gauche, mois au milieu, créneaux à
-   droite. Carte de 817 × 410 px sur un écran de 1 440.
-3. **Comment** : récapitulatif à gauche, formulaire à droite — nom, e-mail,
-   notes, et le choix entre Google Meet et appel téléphonique.
+   droite. Carte de 817 × 410 px sur un écran de 1 440. Le créneau cliqué passe
+   au blanc avant que la carte tourne — 320 ms, le temps d'un regard : sans ce
+   délai, l'écran suivant arrive avant que l'œil ait vu ce qui a été choisi.
+3. **Comment** : récapitulatif à gauche, formulaire à droite — e-mail, notes, et
+   le choix entre Google Meet et appel téléphonique. Le nom n'est pas redemandé :
+   il a été donné au premier écran.
 4. **Planifié** : la carte de confirmation de Cal.com — rond vert, puis
    *What / When / Who / Where*, jeton « Host », et l'ajout au calendrier.
 5. **Annulé** : la même carte en rouge, mentions barrées, jetons « Host » et
