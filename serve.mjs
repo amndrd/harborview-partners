@@ -1,28 +1,12 @@
 // Static server for the harborviewpartners.com mirror.
 //   node serve.mjs [port]        ->  http://localhost:8080
-//
-// Sert aussi /api/chat, le relais du chatbot vers l'API Claude (voir
-// api/_lib/chat-core.mjs). En production, c'est la fonction serverless
-// api/chat.mjs qui joue ce rôle — la logique, elle, est la même.
-//   ANTHROPIC_API_KEY=sk-ant-... node serve.mjs
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import {
-  ChatError,
-  checkRateLimit,
-  createChatStream,
-  STREAM_HEADERS,
-} from './api/_lib/chat-core.mjs';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.argv[2] || 8080);
-
-// Dossiers de code serveur : jamais servis comme fichiers statiques. Sans ce
-// garde-fou, http://localhost:8080/api/_lib/persona.mjs afficherait le prompt
-// système en clair dans le navigateur.
-const PRIVATE_DIRS = [/^\/api\//i, /^\/netlify\//i];
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -53,69 +37,8 @@ function resolve(urlPath) {
   return null;
 }
 
-/* ---------- Relais du chatbot ----------
-   Pont entre l'API node:http (req/res en flux Node) et le cœur partagé, qui
-   parle le format standard du Web (ReadableStream). Le corps est lu en
-   entier avant l'appel — un message de chat est court, et la limite ci-dessous
-   empêche qu'un client envoie un corps sans fin. */
-async function handleChat(req, res) {
-  const respondJson = (status, payload) => {
-    res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify(payload));
-  };
-
-  if (req.method !== 'POST') return respondJson(405, { error: 'Method not allowed.' });
-
-  try {
-    const body = await readJsonBody(req);
-    checkRateLimit(req.socket.remoteAddress || 'local');
-    const stream = await createChatStream(body);
-
-    res.writeHead(200, STREAM_HEADERS);
-    for await (const chunk of stream) {
-      // Si le visiteur ferme l'onglet en cours de réponse, on cesse d'écrire.
-      if (res.writableEnded) break;
-      res.write(chunk);
-    }
-    res.end();
-  } catch (e) {
-    if (res.headersSent) return res.end();
-    if (e instanceof ChatError) return respondJson(e.status, { error: e.message });
-    console.error('[chat] erreur inattendue :', e);
-    respondJson(500, { error: 'Something went wrong.' });
-  }
-}
-
-function readJsonBody(req, limit = 128 * 1024) {
-  return new Promise((resolve, reject) => {
-    let size = 0;
-    const parts = [];
-    req.on('data', (chunk) => {
-      size += chunk.length;
-      if (size > limit) {
-        reject(new ChatError(413, 'Message too long.'));
-        req.destroy();
-        return;
-      }
-      parts.push(chunk);
-    });
-    req.on('end', () => {
-      try {
-        resolve(JSON.parse(Buffer.concat(parts).toString('utf8')));
-      } catch {
-        reject(new ChatError(400, 'Malformed request.'));
-      }
-    });
-    req.on('error', reject);
-  });
-}
-
 http.createServer((req, res) => {
-  const urlPath = (req.url || '/').split('?')[0];
-
-  if (urlPath === '/api/chat') return handleChat(req, res);
-
-  const file = PRIVATE_DIRS.some((re) => re.test(urlPath)) ? null : resolve(req.url);
+  const file = resolve(req.url);
   if (!file) {
     const page = path.join(ROOT, '404.html');
     res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });

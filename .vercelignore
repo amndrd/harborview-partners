@@ -1,7 +1,4 @@
-# Fichiers propres à Netlify : inutiles sur Vercel, et surtout servis en
-# statique par lui (https://…/netlify/functions/chat.mjs répondait 200 et
-# affichait le source). Les exclure du déploiement plutôt que de les masquer
-# par une règle de routage : ce qui n'est pas envoyé ne peut pas fuir.
-# Sans effet sur un déploiement Netlify, qui ne lit pas ce fichier.
-netlify/
+# Fichier propre à Netlify : inutile sur Vercel, et servi en statique par lui
+# (https://…/netlify.toml répondrait 200). Ce qui n'est pas envoyé ne peut pas
+# fuir. Sans effet sur un déploiement Netlify, qui ne lit pas ce fichier.
 netlify.toml
