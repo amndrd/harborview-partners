@@ -163,22 +163,26 @@ curseur suivent l'arc de la crête, pas un cercle autour du pointeur.
   corrélation avec la position du curseur ; une dérive lente est ce qui reproduit
   le mieux cette variété.
 - La crête se **bombe** au passage du curseur, dans un rayon de `0,23 D`.
-- **L'orbe n'est pas accrochée au curseur** : elle est portée par une chaîne de
-  sept nœuds qui courent après lui, chacun rattrapant le précédent un peu moins
-  vite (17/s pour la tête, ×0,76 à chaque maillon) et pesant un peu moins lourd
-  (×0,74), avec un rayon qui s'affine (×0,90). Souris lancée, l'orbe s'étire le
-  long du tracé et se termine en pointe ; souris arrêtée, la chaîne se referme et
-  l'orbe redevient rond en une demi-seconde. Une errance lente (0,02 D à 0,13 Hz,
-  décalée par nœud) l'empêche de se figer en cercle parfait au repos.
-  L'influence retenue est le **maximum** sur la chaîne, jamais la somme :
-  additionner ferait un bourrelet plus clair partout où deux nœuds se
-  chevauchent, c'est-à-dire dès que la souris ralentit.
+- **L'orbe n'est pas accrochée au curseur, c'est le relevé de son tracé.** Une
+  tête court après le pointeur (rattrapage de 8 par seconde, donc elle traîne
+  déjà visiblement derrière lui), et un tampon circulaire garde ses positions des
+  **26 derniers relevés sur 1 s**. Souris lancée, les relevés s'espacent et
+  l'orbe s'étire le long du geste ; souris arrêtée, ils se rejoignent et elle se
+  referme en une seconde. Le poids (×0,958) et le rayon (×0,962) décroissent d'un
+  relevé au précédent : tête large, queue effilée — à rayon constant, la traînée
+  se lisait comme une bande de largeur égale, donc comme une zone teintée plutôt
+  que comme un mouvement.
 
-  C'est le seul écart assumé avec la référence, où le halo suit le curseur d'un
-  bloc.
+  Deux points de méthode. L'influence retenue est le **maximum** sur les relevés,
+  jamais la somme : additionner ferait un bourrelet plus clair partout où deux
+  relevés se chevauchent, c'est-à-dire dès que la souris ralentit — exactement là
+  où l'orbe doit rester lisse. Et la fenêtre doit couvrir **plus d'une demi-
+  seconde** : à 0,6 s, un déplacement ordinaire (400 à 500 px/s) ne produisait
+  qu'une traînée aussi longue que le diamètre de l'orbe, qui restait donc ronde.
 
-Rien de tout cela sur écran tactile (`pointer: coarse`) ni sous
-`prefers-reduced-motion`, où l'onde est figée à son plein et la boucle arrêtée.
+  Une errance lente de la tête (0,024 D à 0,13 Hz) l'empêche de se figer en cercle
+  parfait au repos. C'est le seul écart assumé avec la référence, où le halo suit
+  le curseur d'un bloc.
 
 **Coût.** Deux passes de dessin : tous les points au repos — l'immense majorité —
 sont empilés dans un seul tracé et remplis d'un coup ; seuls ceux que l'onde ou le

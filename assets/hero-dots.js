@@ -6,10 +6,11 @@
  * autres restent à peine visibles. Au survol, la souris éclaire les points
  * autour d'elle, les teinte, et bombe la crête de l'onde sur son passage.
  *
- * Cette orbe n'est pas un disque accroché au curseur : elle est portée par une
- * chaîne de nœuds qui courent après lui, chacun un peu moins vite que le
- * précédent. Souris lancée, elle s'étire le long du tracé et s'affine en
- * pointe ; souris arrêtée, la chaîne se referme et l'orbe redevient rond.
+ * Cette orbe n'est pas un disque accroché au curseur : c'est le relevé de son
+ * tracé. Une tête court après le pointeur, et un tampon circulaire garde ses
+ * positions de la dernière seconde. Souris lancée, les relevés s'espacent et
+ * l'orbe s'étire le long du geste, tête large et queue effilée ; souris
+ * arrêtée, ils se rejoignent et elle se referme.
  *
  * Les réglages ci-dessous sont mesurés sur la vidéo de référence, pas devinés :
  * détection des points sur sept images, ajustement de cercle sur les crêtes,
@@ -64,13 +65,15 @@
     tintMax:    .85,            // part maximale d'accent dans la couleur du point
     bulgeR:     .230,           // rayon de déformation de la crête
     bulge:      .045,           // amplitude de la déformation, en D
-    trail:      7,              // nœuds de la traînée : l'orbe s'étire au lieu
-    trailLag:   17,             // de suivre le curseur d'un bloc. Rattrapage du
-    trailEase:  .76,            // premier nœud, par seconde, puis part de cette
-    trailFade:  .74,            // vitesse et du poids gardée d'un nœud au suivant
-    trailTaper: .90,            // ... et de son rayon : la traînée s'affine en
-                                // pointe au lieu de traîner un tube
-    wobble:     .020,           // errance lente de chaque nœud, en D — casse le
+    trail:      26,             // relevés du tracé composant la traînée
+    trailWindow: 1.0,           // durée couverte, en s. À 0,6 s la traînée
+                                // n'était plus longue que le diamètre de l'orbe
+                                // aux vitesses ordinaires : elle restait ronde
+    trailLag:   8,              // rattrapage de la tête, par seconde : l'orbe
+                                // court après le curseur au lieu d'y coller
+    trailFade:  .958,           // poids gardé d'un relevé au précédent
+    trailTaper: .962,           // ... et rayon : tête large, queue effilée
+    wobble:     .024,           // errance lente de la tête, en D — casse le
     wobbleHz:   .13,            // cercle parfait sans jamais tressauter
     hueCycle:   25,             // s pour un tour complet de teinte
     hueSat:     .78,            // saturation de l'accent
@@ -127,39 +130,45 @@
     var glow = null;                     // empreinte du halo des points vifs
     var t = 0;
 
-    /* Pointeur : une cible (mx, my) et une chaîne de nœuds qui court après
-       elle, chacun rattrapant le précédent un peu moins vite. Souris immobile,
-       toute la chaîne se referme sur un point et l'orbe redevient rond ; souris
-       lancée, elle se déploie le long du tracé. `power` fait monter et descendre
-       l'ensemble quand le pointeur entre dans le hero ou le quitte. */
+    /* Pointeur : une cible (mx, my), une tête qui court après elle, et le
+       relevé de son tracé. La traînée n'est pas une forme accrochée au curseur
+       mais le chemin que la tête vient de parcourir : un tampon circulaire garde
+       ses positions des 0,6 dernières secondes, le plus récent en premier. Souris
+       lancée, les relevés s'espacent et l'orbe s'étire le long du geste ; souris
+       arrêtée, ils se rejoignent et l'orbe se referme.
+
+       `power` fait monter et descendre l'ensemble quand le pointeur entre dans le
+       hero ou le quitte. */
     var mx = 0, my = 0, power = 0, wanted = 0, seeded = false;
-    var tx = [], ty = [], tw = [], trate = [], tsz = [];
+    var hx = 0, hy = 0;                  // tête, qui rattrape la cible
+    var tx = [], ty = [], tw = [], tsz = [];
+    var head = 0, sample = 0;            // index du relevé courant, temps depuis
 
     (function () {
       for (var i = 0; i < CFG.trail; i++) {
         tx.push(0); ty.push(0);
         tw.push(Math.pow(CFG.trailFade, i));
-        trate.push(CFG.trailLag * Math.pow(CFG.trailEase, i));
         tsz.push(Math.pow(CFG.trailTaper, 2 * i));   // sur les rayons au carré
       }
     })();
 
-    /* Chaque nœud vise le précédent, le premier vise le pointeur. Le pas de
-       rattrapage passe par une exponentielle : sans elle, le mouvement
-       dépendrait de la cadence d'affichage. */
+    /* La tête suit la cible par une exponentielle : sans elle, le rattrapage
+       dépendrait de la cadence d'affichage. Le relevé le plus récent la suit en
+       continu, et l'on n'avance d'un cran qu'au bout d'un pas de temps — sinon
+       la traînée avancerait par saccades à la cadence d'échantillonnage. */
     function follow(dt) {
       var wob = CFG.wobble * D;
-      for (var i = 0; i < tx.length; i++) {
-        var gx0 = i === 0 ? mx : tx[i - 1];
-        var gy0 = i === 0 ? my : ty[i - 1];
-        // errance : deux sinusoïdes lentes et décalées par nœud. La tête en
-        // reçoit sa part, sinon l'orbe se fige dès que la souris s'arrête.
-        var amp = wob * (.35 + .65 * i / tx.length);
-        gx0 += amp * Math.sin(t * 6.283 * CFG.wobbleHz + i * 1.7);
-        gy0 += amp * Math.cos(t * 6.283 * CFG.wobbleHz * 1.31 + i * 2.3);
-        var k = 1 - Math.exp(-dt * trate[i]);
-        tx[i] += (gx0 - tx[i]) * k;
-        ty[i] += (gy0 - ty[i]) * k;
+      var k = 1 - Math.exp(-dt * CFG.trailLag);
+      hx += (mx + wob * Math.sin(t * 6.283 * CFG.wobbleHz) - hx) * k;
+      hy += (my + wob * Math.cos(t * 6.283 * CFG.wobbleHz * 1.31) - hy) * k;
+
+      tx[head] = hx; ty[head] = hy;
+      sample += dt;
+      var step = CFG.trailWindow / CFG.trail;
+      while (sample >= step) {
+        sample -= step;
+        head = (head + tx.length - 1) % tx.length;
+        tx[head] = hx; ty[head] = hy;
       }
     }
 
@@ -246,7 +255,11 @@
           var lp = 0;
           if (power > .002 && x > bx0 && x < bx1 && y > by0 && y < by1) {
             for (var n2 = 0; n2 < tx.length; n2++) {
-              var pdx = x - tx[n2], pdy = y - ty[n2];
+              var s2 = (head + n2) % tx.length;      // du plus récent au plus ancien
+              // deux comparaisons avant toute multiplication : sur une traînée
+              // étalée, un point donné n'est voisin que de quelques relevés
+              var pdx = x - tx[s2]; if (pdx > reach || pdx < -reach) continue;
+              var pdy = y - ty[s2]; if (pdy > reach || pdy < -reach) continue;
               var pd2 = pdx * pdx + pdy * pdy;
               if (pd2 > tintR2x6) continue;
               var w2 = tw[n2] * power;
@@ -265,7 +278,7 @@
             if (lp > 0 || m > 0) {
               // la crête ne se bombe que sous la tête : la traînée éclaire et
               // colore, elle ne pousse pas
-              var b2 = ((x - tx[0]) * (x - tx[0]) + (y - ty[0]) * (y - ty[0])) /
+              var b2 = ((x - hx) * (x - hx) + (y - hy) * (y - hy)) /
                        (bulgeR * bulgeR);
               if (b2 < 12) d -= bulge * Math.exp(-b2) * power;
             }
@@ -275,7 +288,9 @@
 
           a = clamp01(a + CFG.lightGain * lp);
 
-          if (a < .012 && m < .012) {
+          // seuils du lot commun : à 5 % d'accent le point est encore blanc à
+          // 95 %, inutile de lui payer un remplissage à lui seul
+          if (a < .02 && m < .05) {
             // au repos : on empile dans le tracé commun
             var rj = rBase * (1 + CFG.baseJitter * jitter[k] * .6);
             ctx.moveTo(x + rj, y);
@@ -390,6 +405,7 @@
       // l'écran depuis le coin en une grande balayure
       if (!seeded) {
         seeded = true;
+        hx = x; hy = y;
         for (var i = 0; i < tx.length; i++) { tx[i] = x; ty[i] = y; }
       }
       wanted = (x >= 0 && y >= 0 && x <= b.width && y <= b.height) ? 1 : 0;
