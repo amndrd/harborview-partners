@@ -437,11 +437,13 @@ calendrier — seul écran qui a besoin de ses trois colonnes —, 717 pour la
 confirmation, 617 pour la carte finale. Une ligne de formulaire étalée sur mille
 pixels ne se lit pas, et la référence fait la même chose.
 
-**La barre affiche ses six onglets** sur cette page, et le bouton « Book a call »
-en est retiré — le visiteur y est déjà. Le thème ne découvre les onglets qu'avec
-la classe `show-menu`, qu'il ne pose qu'en haut de l'accueil : ils sont montrés
-ici pour de bon, et la rangée reprend la place du bouton, au ras de la gouttière.
-Sous 992 px, le menu déroulant reprend la main, comme partout ailleurs.
+**La barre ne porte que deux choses** sur cette page : le bloc LinkedIn à gauche
+et le bouton Menu à droite, qui reprend la place du bouton « Book a call » —
+retiré, le visiteur y étant déjà. Les onglets sont retirés eux aussi : laissés à
+la charge du thème, qui les remonte dans leur masque, ils laissaient dépasser un
+liseré (33/255 contre 15 pour le fond) visible sur un grand écran sombre. Le bloc
+LinkedIn, lui, n'apparaît d'ordinaire qu'au défilement ; il n'y a rien à faire
+défiler ici, on le découvre donc d'emblée.
 
 **Le pied de page et le bouton de la barre sont repeints** pour cette page
 seulement : le bandeau légal passe au noir avec le texte en blanc, et le bouton

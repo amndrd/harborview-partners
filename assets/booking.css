@@ -436,23 +436,25 @@
 }
 .body-inner:has(.bk) .header-act .btn .txt { color: #0f0f0f; }
 
-/* ── La barre, entière, sur la page de réservation ─────────────────────────
-   Le thème ne découvre les onglets qu'avec la classe `show-menu`, qu'il ne
-   pose qu'en haut de l'accueil : ailleurs ils restent remontés dans leur
-   masque. Ici on les montre pour de bon, et l'on retire le bouton « Book a
-   call » — le visiteur y est déjà. La rangée reprend alors la place du
-   bouton, au ras de la gouttière. */
-.body-inner:has(.bk) .header-menu-list {
-  opacity: 1;
-  pointer-events: auto;
-  right: 2.4rem;
-}
-.body-inner:has(.bk) .header-menu-list .header-link { transform: none; }
-.body-inner:has(.bk) .header-act { display: none; }
+/* ── La barre sur la page de réservation ──────────────────────────────────
+   Deux éléments seulement : le bloc LinkedIn à gauche et le bouton Menu à
+   droite. Les onglets sont laissés dans leur état d'origine — le thème les
+   garde remontés dans leur masque hors de l'accueil — et le bouton « Book a
+   call » est retiré : le visiteur y est déjà.
 
-@media screen and (max-width: 991px) {
-  /* Sous 992 px le thème rend la main au menu déroulant : on lui laisse. */
-  .body-inner:has(.bk) .header-menu-list { opacity: 0; pointer-events: none; }
+   Le bloc LinkedIn, lui, n'apparaît d'ordinaire qu'au défilement ; il n'y a
+   rien à faire défiler ici, on le découvre donc d'emblée. */
+.body-inner:has(.bk) .header-act { display: none; }
+/* Les onglets sont retirés, pas seulement remontés : laissés à la charge du
+   thème, leur masque laissait dépasser un liseré (33/255 contre 15 pour le
+   fond), visible sur un grand écran sombre. */
+.body-inner:has(.bk) .header-menu-list { display: none; }
+.body-inner:has(.bk) .header-linkedin { opacity: 1; transform: none; }
+
+/* Le bouton Menu reprend la place du bouton retiré, au bord droit. */
+.body-inner:has(.bk) #w-node-_3d3962a8-36f0-9a73-787b-7f85fa5409c7-e7cf7e47 {
+  grid-column: 13 / -2;
+  justify-self: end;
 }
 
 /* Le texte de la barre, en clair sur cette page. Le thème le tire de
