@@ -132,6 +132,29 @@ Vérifié en masquant la barre et en mesurant la luminance réelle de la rangée
 l'accueil, 2 croisent la barre à un instant donné, 121 images/s en défilement
 continu.
 
+## Le hero survit aux navigations
+
+Le site est une SPA : Barba remplace le contenu du conteneur, et **rien d'autre**.
+Tout ce qui vit hors du conteneur appartient donc à la page par laquelle on est
+entré, et n'est jamais remplacé. C'est la règle à garder en tête pour toute
+addition au hero.
+
+Deux conséquences, toutes deux corrigées :
+
+- **Le CSS du hero est une feuille à part** (`assets/hero.css`), liée au `<head>`
+  des 40 pages. Il vivait dans le `<style>` embarqué d'`index.html`, à
+  l'intérieur de `.component-global` — un bloc qui précède le conteneur. En
+  arrivant sur l'accueil depuis une autre page, c'est le bloc de la page quittée
+  qui restait en place : titre en police de repli, onglets en colonne, fond nu.
+- **Les deux scripts du hero sont chargés partout** (`hero-title-reveal.js`,
+  `hero-dots.js`), et non plus par la seule page d'accueil. Ils sont écrits pour
+  ça : sans hero dans le document ils ne font rien, et leur `MutationObserver`
+  les réveille quand le conteneur arrive.
+
+Vérifié depuis `/contact`, `/about`, `/services` et `/insights`, plus deux
+allers-retours d'affilée sans rechargement : titre en Sora à 80,6 px centré à
+720 px, canvas à 1440 × 900, onglets en rangée, une seule instance, aucune erreur.
+
 ## Titre du hero (accueil)
 
 Sur deux lignes, dans la casse écrite : `Grow Your Business` / `to New Heights`.
@@ -363,7 +386,7 @@ widget) est partie avec lui, et reviendra avec lui.
 | `app/`     | L'application custom du site (Vite/Rolldown) : Three.js, GSAP, Barba.js, Lenis, Swiper, curseur custom — 34 chunks |
 | `vendor/`  | jQuery et la librairie Finsweet Attributes (47 chunks) |
 | `images/ocean/` | Textures de la scène Three.js de l'accueil |
-| `assets/`  | Les ajouts maison : `hero-dots.js` (fond animé du hero), `hero-title-reveal.js` (apparition du titre), `header.css` et `header-contrast.js` (barre de navigation), `logo-glass.css` (marque), le bandeau cookies (`cookie-consent.*`, `cookie.svg`) |
+| `assets/`  | Les ajouts maison : `hero.css` (police, mise en page et fond du hero), `hero-dots.js` (l'onde), `hero-title-reveal.js` (apparition du titre), `header.css` et `header-contrast.js` (barre de navigation), `logo-glass.css` (marque), le bandeau cookies (`cookie-consent.*`, `cookie.svg`) |
 | `background/` | `sphere.html` — la sphère de points qui a occupé ce fond entre le globe et l'onde ; autonome et réglable, plus câblée dans le site |
 | `serve.mjs` | Serveur statique (URLs propres, `Range` pour les vidéos) |
 

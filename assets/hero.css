@@ -1,0 +1,203 @@
+/* ── Hero de l'accueil : police, mise en page, fond ─────────────────────────
+   Ce CSS vivait dans le <style> embarqué d'index.html, à l'intérieur de
+   .component-global — un bloc qui précède le conteneur Barba. Barba ne remplace
+   que le conteneur : en arrivant sur l'accueil depuis une autre page, c'est donc
+   le bloc de la page *quittée* qui restait en place, et le hero s'affichait sans
+   rien de tout ceci — titre en police de repli, onglets en colonne, fond nu.
+
+   Déplacé dans une feuille liée au <head> des 40 pages, il survit à toutes les
+   navigations. Les règles ne visent que des éléments propres à l'accueil
+   (.need-help-title, .home-hero-*, .hv-bg) ; seule la rangée d'onglets touche
+   l'en-tête commun, et c'est voulu — elle doit être identique partout. */
+
+/* Sora (Google Fonts), sous-ensembles latins, servie depuis /cdn comme les
+   autres polices du site : le miroir reste autonome, sans requête vers
+   fonts.gstatic.com. Police variable — graisse réelle de 100 à 800, donc le
+   370 du titre est dessiné tel quel, sans interpolation approchée. */
+@font-face {
+  font-family: 'Sora';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url('/cdn/6a44eec1ed1af2c4c403df6b/Sora-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Sora';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url('/cdn/6a44eec1ed1af2c4c403df6b/Sora-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* ── Titre hero « Grow Your Business / to New Heights » ────────────────
+   Ce titre est volontairement hors du système d'animation du thème (pas de
+   classe .heading) : son SplitText posait une largeur en ligne qui décalait
+   le bloc. Son apparition est gérée par assets/hero-title-reveal.js.
+   Casse d'origine, pas de text-transform : le titre s'écrit tel quel. */
+.need-help-title {
+  font-family: 'Sora', var(--font--heading);
+  font-weight: 370;             /* graisse réelle de la police variable */
+  font-size: 5.6vw;
+  line-height: 1.05;
+  text-align: center;
+  white-space: nowrap;
+  width: max-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+/* Le téléphone garde les 7vw d'origine : le titre y est déjà au plus juste,
+   et le réduire encore l'aurait mis au niveau de la description (21,8 px
+   contre 17,9 px à 390 px de large). */
+@media screen and (max-width: 767px) {
+  .need-help-title { font-size: 7vw; }
+}
+/* ── En-tête ──────────────────────────────────────────────────────────
+   Navigation à sa place d'origine, simplement décalée vers la droite
+   (3.8rem à l'origine). */
+/* Navigation en une rangée, sur l'axe du bouton « Book a call » (elle
+   tombait en colonne sous le logo). Le conteneur de l'en-tête a exactement
+   la hauteur du bouton : top:0 + bottom:0 + align-items:center posent donc
+   les onglets sur son axe à toutes les largeurs, sans nombre à régler. À
+   droite, la rangée s'arrête une gouttière avant le bouton. */
+.header-menu-list {
+  flex-flow: row;
+  align-items: center;
+  column-gap: 3.2rem;
+  padding-top: 0;
+  top: 0;
+  bottom: 0;
+  left: auto;
+  right: 22rem;                 /* ~16rem de bouton + 2.4rem de marge + 3.6rem */
+}
+
+/* ── Hero ─────────────────────────────────────────────────────────────
+   Le bloc de contenu prend toute la largeur et se centre. */
+#w-node-_1376d989-d8bf-cb4a-7cc3-8fd5821a906e-c403df38 {
+  grid-column: 1 / -1;
+}
+/* Contenu centré. L'alignement à gauche datait du titre à mot cyclé, dont la
+   largeur figée sur le mot le plus long faisait dériver le texte visible ;
+   le titre est fixe depuis, et la sphère qu'il fallait dégager à droite a
+   disparu du hero. */
+.home-hero-text-wrap {
+  align-items: center;
+  text-align: center;
+  /* centré entre le bas du logo et le bas de l'écran : la réserve haute vaut
+     exactement la hauteur occupée par l'en-tête (bas du logo = 7.55rem, le
+     bandeau d'actualités qui coiffait la barre ayant été retiré), la réserve
+     basse est nulle. */
+  justify-content: center;
+  padding-top: 7.55rem;
+  padding-bottom: 0;
+  padding-left: var(--container--padding);
+  padding-right: var(--container--padding);
+}
+@media screen and (max-width: 767px) {
+  .home-hero-text-wrap { padding-top: 5.7rem; }   /* en-tête plus compact */
+}
+.home-hero-title {
+  width: auto;
+}
+/* Description : deux lignes. Le thème la tenait en 1.6rem dans une colonne de
+   32.6rem, ce qui la coupait en trois. La largeur suit la taille (les deux en
+   rem, donc proportionnelles à l'écran) : la coupure tombe au même endroit de
+   992 à 1920 px, juste après « grow online, ». */
+.home-hero-desc {
+  max-width: 72rem;
+}
+.home-hero-desc .txt {
+  font-size: 2.4rem;
+}
+/* Sous 767 px l'unité rem change d'échelle et la colonne dépasserait l'écran.
+   Trois lignes comme avant, à peine plus grandes. */
+@media screen and (max-width: 767px) {
+  .home-hero-desc {
+    max-width: 36rem;
+  }
+  .home-hero-desc .txt {
+    font-size: 1.8rem;
+  }
+}
+.home-hero-links {
+  justify-content: center;
+}
+
+/* ── Fond du hero : trame de points parcourue par une onde ─────────────
+   Le calque est posé dans .home-hero-stick, qui est collant : il reste donc
+   fixe pendant les 150 vh du hero. Le dessin est dans assets/hero-dots.js ;
+   ici, seulement la boîte et son apparition. */
+/* Squelette rendu à la timeline du thème — voir le commentaire au-dessus du
+   bloc dans le corps de la page. Rien n'en sort jamais. */
+.hv-theme-hooks { display: none }
+
+.hv-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;                   /* .home-hero-text-wrap est en 2 */
+  overflow: hidden;
+  background: #000;
+  animation: hv-fade-in 1.2s ease 0.2s both;
+}
+@keyframes hv-fade-in { from { opacity: 0 } to { opacity: 1 } }
+
+/* Le canvas ne capte jamais le pointeur : .home-hero-text-wrap le couvre de
+   toute façon. Le survol est écouté sur document. */
+.hv-bg canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+/* Apparition : une ligne = un balayage, comme les autres textes du site.
+   Le dégradé d'une ligne peint aussi le texte de ses enfants, donc le mot
+   apparaît dans la même coulée que sa phrase. */
+.nh-line {
+  --bg-progress: 30;            /* invisible tant que l'apparition n'a pas eu lieu */
+  display: block;
+  color: transparent;
+  background-image: linear-gradient(
+    90deg,
+    var(--color-final, var(--_color---content--main)) 0%,
+    var(--color-final, var(--_color---content--main)) 30%,
+    var(--_color---content--brand) 40%,
+    transparent 50%,
+    transparent 100%
+  );
+  background-size: 350% 100%;
+  background-position-x: calc((100 - var(--bg-progress)) * 1%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+/* Une fois apparue, la ligne repasse en texte normal : le mot peut alors
+   peindre lui-même ses deux couches sans que la ligne les recouvre. */
+.nh-line.is-done {
+  background-image: none;
+  color: inherit;
+}
+
+/* Sortie au scroll, calquée sur celle du thème (.home-hero-*.split-line) :
+   chaque ligne remonte dans son masque, et redescend au scroll arrière. */
+.nh-line-mask {
+  display: block;
+  overflow: hidden;
+  /* le masque descend sous la ligne pour laisser passer les jambages (« g »
+     de Grow, « y » de your), la marge négative annulant l'effet sur
+     l'interligne */
+  padding-bottom: 0.13em;
+  margin-bottom: -0.13em;
+}
+@media (min-width: 992px) {
+  .home-hero-text-wrap .need-help-title .nh-line {
+    transition: transform 0.4s ease;
+  }
+  .home-hero-text-wrap.on-hidden .need-help-title .nh-line {
+    /* -115% et non -100% : le masque déborde sous la ligne pour les jambages,
+       il faut sortir aussi cette réserve */
+    transform: translateY(-115%);
+  }
+}
