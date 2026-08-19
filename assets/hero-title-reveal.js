@@ -1,4 +1,4 @@
-/* Titre hero « Grow your / business to / new heights. ».
+/* Titre hero « Grow Your Business / to New Heights ».
  *
  * Ce titre est hors du système d'animation du thème (voir le CSS embarqué dans
  * index.html) : on gère ici son apparition, un balayage par ligne.
