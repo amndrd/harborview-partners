@@ -163,6 +163,19 @@ curseur suivent l'arc de la crête, pas un cercle autour du pointeur.
   corrélation avec la position du curseur ; une dérive lente est ce qui reproduit
   le mieux cette variété.
 - La crête se **bombe** au passage du curseur, dans un rayon de `0,23 D`.
+- **L'orbe n'est pas accrochée au curseur** : elle est portée par une chaîne de
+  sept nœuds qui courent après lui, chacun rattrapant le précédent un peu moins
+  vite (17/s pour la tête, ×0,76 à chaque maillon) et pesant un peu moins lourd
+  (×0,74), avec un rayon qui s'affine (×0,90). Souris lancée, l'orbe s'étire le
+  long du tracé et se termine en pointe ; souris arrêtée, la chaîne se referme et
+  l'orbe redevient rond en une demi-seconde. Une errance lente (0,02 D à 0,13 Hz,
+  décalée par nœud) l'empêche de se figer en cercle parfait au repos.
+  L'influence retenue est le **maximum** sur la chaîne, jamais la somme :
+  additionner ferait un bourrelet plus clair partout où deux nœuds se
+  chevauchent, c'est-à-dire dès que la souris ralentit.
+
+  C'est le seul écart assumé avec la référence, où le halo suit le curseur d'un
+  bloc.
 
 Rien de tout cela sur écran tactile (`pointer: coarse`) ni sous
 `prefers-reduced-motion`, où l'onde est figée à son plein et la boucle arrêtée.

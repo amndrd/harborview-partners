@@ -6,6 +6,11 @@
  * autres restent à peine visibles. Au survol, la souris éclaire les points
  * autour d'elle, les teinte, et bombe la crête de l'onde sur son passage.
  *
+ * Cette orbe n'est pas un disque accroché au curseur : elle est portée par une
+ * chaîne de nœuds qui courent après lui, chacun un peu moins vite que le
+ * précédent. Souris lancée, elle s'étire le long du tracé et s'affine en
+ * pointe ; souris arrêtée, la chaîne se referme et l'orbe redevient rond.
+ *
  * Les réglages ci-dessous sont mesurés sur la vidéo de référence, pas devinés :
  * détection des points sur sept images, ajustement de cercle sur les crêtes,
  * profils radiaux et analyse de teinte. Les distances sont exprimées en demi-
@@ -59,6 +64,14 @@
     tintMax:    .85,            // part maximale d'accent dans la couleur du point
     bulgeR:     .230,           // rayon de déformation de la crête
     bulge:      .045,           // amplitude de la déformation, en D
+    trail:      7,              // nœuds de la traînée : l'orbe s'étire au lieu
+    trailLag:   17,             // de suivre le curseur d'un bloc. Rattrapage du
+    trailEase:  .76,            // premier nœud, par seconde, puis part de cette
+    trailFade:  .74,            // vitesse et du poids gardée d'un nœud au suivant
+    trailTaper: .90,            // ... et de son rayon : la traînée s'affine en
+                                // pointe au lieu de traîner un tube
+    wobble:     .020,           // errance lente de chaque nœud, en D — casse le
+    wobbleHz:   .13,            // cercle parfait sans jamais tressauter
     hueCycle:   25,             // s pour un tour complet de teinte
     hueSat:     .78,            // saturation de l'accent
     hueLight:   .62,            // clarté de l'accent
@@ -114,8 +127,41 @@
     var glow = null;                     // empreinte du halo des points vifs
     var t = 0;
 
-    // pointeur : position, puissance (montée/descente en douceur), dernier signal
-    var px = 0, py = 0, power = 0, wanted = 0;
+    /* Pointeur : une cible (mx, my) et une chaîne de nœuds qui court après
+       elle, chacun rattrapant le précédent un peu moins vite. Souris immobile,
+       toute la chaîne se referme sur un point et l'orbe redevient rond ; souris
+       lancée, elle se déploie le long du tracé. `power` fait monter et descendre
+       l'ensemble quand le pointeur entre dans le hero ou le quitte. */
+    var mx = 0, my = 0, power = 0, wanted = 0, seeded = false;
+    var tx = [], ty = [], tw = [], trate = [], tsz = [];
+
+    (function () {
+      for (var i = 0; i < CFG.trail; i++) {
+        tx.push(0); ty.push(0);
+        tw.push(Math.pow(CFG.trailFade, i));
+        trate.push(CFG.trailLag * Math.pow(CFG.trailEase, i));
+        tsz.push(Math.pow(CFG.trailTaper, 2 * i));   // sur les rayons au carré
+      }
+    })();
+
+    /* Chaque nœud vise le précédent, le premier vise le pointeur. Le pas de
+       rattrapage passe par une exponentielle : sans elle, le mouvement
+       dépendrait de la cadence d'affichage. */
+    function follow(dt) {
+      var wob = CFG.wobble * D;
+      for (var i = 0; i < tx.length; i++) {
+        var gx0 = i === 0 ? mx : tx[i - 1];
+        var gy0 = i === 0 ? my : ty[i - 1];
+        // errance : deux sinusoïdes lentes et décalées par nœud. La tête en
+        // reçoit sa part, sinon l'orbe se fige dès que la souris s'arrête.
+        var amp = wob * (.35 + .65 * i / tx.length);
+        gx0 += amp * Math.sin(t * 6.283 * CFG.wobbleHz + i * 1.7);
+        gy0 += amp * Math.cos(t * 6.283 * CFG.wobbleHz * 1.31 + i * 2.3);
+        var k = 1 - Math.exp(-dt * trate[i]);
+        tx[i] += (gx0 - tx[i]) * k;
+        ty[i] += (gy0 - ty[i]) * k;
+      }
+    }
 
     /* ── Grille ──────────────────────────────────────────────────────────────
        Le pas est fixe en pixels, pas proportionnel : à 390 px de large, une
@@ -171,6 +217,18 @@
       var lightR = CFG.lightR * D, tintR = CFG.tintR * D;
       var bulgeR = CFG.bulgeR * D, bulge = CFG.bulge * D;
 
+      // boîte englobante de la chaîne : ailleurs, inutile de la parcourir
+      var bx0 = Infinity, bx1 = -Infinity, by0 = Infinity, by1 = -Infinity;
+      var reach = tintR * 2.45;
+      for (var n0 = 0; n0 < tx.length; n0++) {
+        if (tx[n0] - reach < bx0) bx0 = tx[n0] - reach;
+        if (tx[n0] + reach > bx1) bx1 = tx[n0] + reach;
+        if (ty[n0] - reach < by0) by0 = ty[n0] - reach;
+        if (ty[n0] + reach > by1) by1 = ty[n0] + reach;
+      }
+      var lightR2 = lightR * lightR, tintR2 = tintR * tintR;
+      var tintR2x6 = tintR2 * 6;
+
       var col = accent((t / CFG.hueCycle) % 1, CFG.hueSat, CFG.hueLight);
       var rBase = pitch * CFG.rMin, rSpan = pitch * (CFG.rMax - CFG.rMin);
       var live = [];
@@ -182,17 +240,22 @@
           var x = gx[i];
           var a = 0, m = 0;
 
-          // apport du pointeur
+          /* Apport du pointeur : on retient le maximum sur la chaîne, pas la
+             somme — additionner ferait un bourrelet plus clair partout où deux
+             nœuds se chevauchent, c'est-à-dire dès que la souris ralentit. */
           var lp = 0;
-          if (power > .002) {
-            var pdx = x - px, pdy = y - py;
-            var pd2 = pdx * pdx + pdy * pdy;
-            if (pd2 < tintR * tintR * 6) {
-              var q = pd2 / (lightR * lightR);
-              lp = q < 12 ? Math.exp(-q) * power : 0;
-              var qt = pd2 / (tintR * tintR);
-              if (qt < 12) m = Math.min(CFG.tintMax, 1.1 * Math.exp(-qt) * power);
+          if (power > .002 && x > bx0 && x < bx1 && y > by0 && y < by1) {
+            for (var n2 = 0; n2 < tx.length; n2++) {
+              var pdx = x - tx[n2], pdy = y - ty[n2];
+              var pd2 = pdx * pdx + pdy * pdy;
+              if (pd2 > tintR2x6) continue;
+              var w2 = tw[n2] * power;
+              var q = pd2 / (lightR2 * tsz[n2]);
+              if (q < 12) { var v2 = Math.exp(-q) * w2; if (v2 > lp) lp = v2; }
+              var qt = pd2 / (tintR2 * tsz[n2]);
+              if (qt < 12) { var c2 = 1.1 * Math.exp(-qt) * w2; if (c2 > m) m = c2; }
             }
+            if (m > CFG.tintMax) m = CFG.tintMax;
           }
 
           // apport de l'onde, la crête bombée par le pointeur
@@ -200,7 +263,10 @@
             var dx = x - cx, dy = y - cy;
             var d = Math.sqrt(dx * dx + dy * dy);
             if (lp > 0 || m > 0) {
-              var b2 = ((x - px) * (x - px) + (y - py) * (y - py)) / (bulgeR * bulgeR);
+              // la crête ne se bombe que sous la tête : la traînée éclaire et
+              // colore, elle ne pousse pas
+              var b2 = ((x - tx[0]) * (x - tx[0]) + (y - ty[0]) * (y - ty[0])) /
+                       (bulgeR * bulgeR);
               if (b2 < 12) d -= bulge * Math.exp(-b2) * power;
             }
             var u = (d - R) / crest;
@@ -289,6 +355,7 @@
       // couleur s'allumerait et s'éteindrait d'un coup au bord du hero
       var step = dt * 1000 / CFG.fadeMs;
       power += Math.max(-step, Math.min(step, wanted - power));
+      follow(dt);
       applyFade();
       if (fadeShown > 0) draw();
       raf = requestAnimationFrame(frame);
@@ -318,7 +385,13 @@
       if (!fine || reduced) return;
       var b = canvas.getBoundingClientRect();
       var x = e.clientX - b.left, y = e.clientY - b.top;
-      px = x; py = y;
+      mx = x; my = y;
+      // premier contact : la chaîne naît sur place, sinon elle traverserait
+      // l'écran depuis le coin en une grande balayure
+      if (!seeded) {
+        seeded = true;
+        for (var i = 0; i < tx.length; i++) { tx[i] = x; ty[i] = y; }
+      }
       wanted = (x >= 0 && y >= 0 && x <= b.width && y <= b.height) ? 1 : 0;
     }
 
