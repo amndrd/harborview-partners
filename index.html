@@ -496,7 +496,7 @@
     font-weight: 370;             /* graisse réelle de la police variable */
     font-size: 7vw;
     line-height: 1.05;
-    text-align: left;
+    text-align: center;
     white-space: nowrap;
     width: max-content;
     margin-left: auto;
@@ -519,13 +519,13 @@
   #w-node-_1376d989-d8bf-cb4a-7cc3-8fd5821a906e-c403df38 {
     grid-column: 1 / -1;
   }
-  /* Contenu calé à gauche, sur la même marge que le logo et la navigation.
-     Centrer le bloc désaxait le titre : sa largeur est figée sur le mot le plus
-     long, donc le texte visible dérivait jusqu'à ~80 px selon le mot affiché.
-     Aligné à gauche, l'aplomb est franc et le globe reste dégagé à droite. */
+  /* Contenu centré. L'alignement à gauche datait du titre à mot cyclé, dont la
+     largeur figée sur le mot le plus long faisait dériver le texte visible ;
+     le titre est fixe depuis, et la sphère qu'il fallait dégager à droite a
+     disparu du hero. */
   .home-hero-text-wrap {
-    align-items: flex-start;
-    text-align: left;
+    align-items: center;
+    text-align: center;
     /* centré entre le bas du logo et le bas de l'écran : la réserve haute vaut
        exactement la hauteur occupée par l'en-tête (bas du logo = 7.55rem, le
        bandeau d'actualités qui coiffait la barre ayant été retiré), la réserve
@@ -541,14 +541,9 @@
   }
   .home-hero-title {
     width: auto;
-    margin-left: 0;
-  }
-  .need-help-title {
-    margin-left: 0;
-    margin-right: 0;
   }
   .home-hero-links {
-    justify-content: flex-start;
+    justify-content: center;
   }
 
   /* ── Arrière-plan du hero : sphère de points ───────────────────────────
