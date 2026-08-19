@@ -12,6 +12,10 @@
  * fonds de couleur, images, vidéos et canvas — et l'on prend la dernière
  * surface dans l'ordre du document, celle qui recouvre les autres.
  *
+ * Deux précautions font tenir le résultat : on ne compose que les surfaces
+ * réellement peintes à cet endroit (voir peinte()), et la bascule a deux seuils
+ * au lieu d'un, pour que la couleur ne tremble pas dans les zones de fondu.
+ *
  * La classe posée est celle du thème : tout son habillage (texte, bouton,
  * mention de langue) suit alors sans une ligne de CSS de plus.
  */
@@ -20,7 +24,9 @@
 
   var PROBE = .55;              // hauteur sondée dans la rangée, en part de sa hauteur
   var MIN_SHARE = .55;          // largeur minimale d'une surface, en part de l'écran
-  var DARK = 128;               // luminance sous laquelle le texte passe en clair
+  var VERS_CLAIR = 118;         // le texte passe en blanc sous ce fond
+  var VERS_SOMBRE = 152;        // ... et ne repasse en noir qu'au-dessus de
+                                // celui-ci : entre les deux, il ne bouge pas
   var COLS = 16;                // colonnes échantillonnées dans un média
 
   var header = null, cands = [], sampled = new WeakMap(), pending = 0, watching = false;
@@ -101,29 +107,59 @@
     }
   }
 
+  /* Une surface ne compte que si elle est réellement peinte à cet endroit.
+     La boîte ne suffit pas à le dire : une section dont la partie collante a
+     fini sa course garde une boîte étirée sur toute sa piste, longtemps après
+     avoir quitté l'écran. C'est ce qui faisait composer les images claires du
+     fondu par-dessus un hero noir qui n'était plus là — 70 points de luminance
+     en moins, et la barre passait en blanc sur un fond déjà clair.
+
+     Le test de survol, lui, sait ce qui est devant. On garde donc : ce que la
+     pile renvoie, les ancêtres de cette pile (ils peignent derrière), et les
+     couches en `pointer-events: none` posées à l'intérieur — invisibles au test
+     de survol, mais bien peintes, comme les images de fond du site. */
+  function peinte(el, stack) {
+    for (var i = 0; i < stack.length; i++) {
+      if (stack[i] === el || el.contains(stack[i])) return true;
+    }
+    if (getComputedStyle(el).pointerEvents === 'none') {
+      for (var j = 0; j < stack.length; j++) if (stack[j].contains(el)) return true;
+    }
+    return false;
+  }
+
   function apply() {
     pending = 0;
     if (!header) return;
     var row = header.querySelector('.header-inner') || header;
     var y = row.getBoundingClientRect().height * PROBE;
+    var stack = document.elementsFromPoint(innerWidth / 2, y)
+      .filter(function (e) { return !e.closest('.header'); });
+
     /* Composition d'arrière en avant, comme le navigateur : chaque surface
-       recouvre le résultat des précédentes à hauteur de sa couverture. Le
-       fond de page est blanc, c'est le point de départ. */
+       recouvre le résultat des précédentes à hauteur de sa couverture. Le fond
+       de page est blanc, c'est le point de départ. */
     var L = 255;
     for (var i = 0; i < cands.length; i++) {
       var el = cands[i];
       var r = el.getBoundingClientRect();
       if (r.top > y || r.bottom < y || r.width < innerWidth * MIN_SHARE) continue;
+      if (!peinte(el, stack)) continue;
       var s = surfacePaint(el, getComputedStyle(el), r.height ? (y - r.top) / r.height : .5);
       if (s) L = L * (1 - s.a) + s.l * s.a;
     }
-    /* On compare à la classe réellement posée, pas à un souvenir : le thème
+
+    /* Deux seuils plutôt qu'un : sous 118 le texte passe en blanc, il ne
+       redevient noir qu'au-dessus de 152, et entre les deux il garde la couleur
+       qu'il avait. Sans cette réserve, la zone de fondu d'une section à l'autre
+       fait osciller la barre à chaque image.
+
+       On compare à la classe réellement posée, pas à un souvenir : le thème
        continue de la basculer sur ses propres repères, et il faut pouvoir
        reprendre la main derrière lui. */
-    var dark = L < DARK;
-    if (header.classList.contains('on-dark') !== dark) {
-      header.classList.toggle('on-dark', dark);
-    }
+    var etait = header.classList.contains('on-dark');
+    var dark = L < (etait ? VERS_SOMBRE : VERS_CLAIR);
+    if (etait !== dark) header.classList.toggle('on-dark', dark);
   }
 
   function schedule() {
