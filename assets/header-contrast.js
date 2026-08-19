@@ -24,10 +24,12 @@
 
   var PROBE = .55;              // hauteur sondée dans la rangée, en part de sa hauteur
   var MIN_SHARE = .55;          // largeur minimale d'une surface, en part de l'écran
-  var VERS_CLAIR = 118;         // le texte passe en blanc sous ce fond
-  var VERS_SOMBRE = 152;        // ... et ne repasse en noir qu'au-dessus de
+  var VERS_CLAIR = 122;         // le texte passe en blanc sous ce fond
+  var VERS_SOMBRE = 158;        // ... et ne repasse en noir qu'au-dessus de
                                 // celui-ci : entre les deux, il ne bouge pas
   var COLS = 16;                // colonnes échantillonnées dans un média
+  var COUVRE = .9;              // couverture minimale pour lire la couleur d'un média
+  var PAGE = 255;               // fond de page, vers lequel un voile ramène
 
   var header = null, cands = [], sampled = new WeakMap(), pending = 0, watching = false;
 
@@ -75,7 +77,20 @@
     var tag = el.tagName;
     if (tag === 'IMG' || tag === 'VIDEO' || tag === 'CANVAS') {
       var v = mediaPaint(el, part);
-      if (v) return { l: v.l, a: v.a * op };
+      /* Un média n'est retenu que s'il couvre franchement. En dessous, on ne
+         sait pas ce qu'il peint vraiment : son canal alpha est lu dans la
+         source, sans tenir compte du recadrage `object-fit` ni des opacités que
+         le thème anime par-dessus. Les fondus de recouvrement de l'accueil, à
+         demi transparents, faisaient ainsi passer la barre en blanc sur une
+         section blanche ; les surfaces en dessous, elles, répondent juste. */
+      if (v && v.a >= COUVRE) return { l: v.l, a: v.a * op };
+      /* Média à demi transparent : sa couleur lue dans la source ne dit pas ce
+         qu'il peint (recadrage `object-fit`, opacités animées par-dessus), mais
+         sa couverture, elle, dit combien il masque. Ces voiles n'existent que
+         pour découvrir la page en dessous — c'est le rôle du fondu de l'accueil,
+         qui recouvre le hero noir pendant que la section blanche monte. On le
+         compose donc vers le fond de page, à hauteur de ce qu'il couvre. */
+      if (v) return { l: PAGE, a: v.a * op };
     }
     var m = /rgba?\(([^)]+)\)/.exec(cs.backgroundColor);
     if (m) {
@@ -139,7 +154,7 @@
     /* Composition d'arrière en avant, comme le navigateur : chaque surface
        recouvre le résultat des précédentes à hauteur de sa couverture. Le fond
        de page est blanc, c'est le point de départ. */
-    var L = 255;
+    var L = PAGE;
     for (var i = 0; i < cands.length; i++) {
       var el = cands[i];
       var r = el.getBoundingClientRect();
