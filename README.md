@@ -116,9 +116,18 @@ sur des repères pensés pour un en-tête escamotable, et le résultat se
 désaccordait (mesuré sur l'accueil : texte blanc sur section blanche vers
 2 000 px, texte sombre sur fond noir vers 3 500 et 4 000 px).
 
-Le test de survol ne suffit pas à trancher : à 4 000 px, ce qui peint le noir
-derrière la barre est une image en `pointer-events: none`, invisible à
-`elementsFromPoint`. Le script regarde donc ce qui est **réellement peint** —
+Les surfaces viennent de la **pile du test de survol elle-même**, parcourue du
+fond vers l'avant : c'est la seule liste qui dise ce qui est devant à cet
+instant. Un inventaire constitué au chargement ne le dirait pas — sur la page de
+réservation, la section noire n'est pas encore dimensionnée quand l'écran de
+démarrage couvre la page, et la barre restait sombre sur fond noir faute d'un
+défilement pour rattraper l'erreur (d'où les quelques reprises programmées
+pendant l'intro).
+
+Le test de survol ne suffit pas à lui seul : à 4 000 px sur l'accueil, ce qui
+peint le noir derrière la barre est une image en `pointer-events: none`,
+invisible à `elementsFromPoint`. Le script regarde donc ce qui est
+**réellement peint** —
 fonds de couleur, images, vidéos, canvas — et les compose d'arrière en avant
 comme le ferait le navigateur, en échantillonnant chaque média sur la seule bande
 qui passe derrière la barre. Un dégradé moyenné en entier donnerait un gris qui
@@ -422,6 +431,18 @@ existera, c'est `envoyer()` qu'il faudra brancher — tout le reste est en place
 « Retour aux réservations », le pied « Cal.com », « Signaler la réservation », la
 bascule de superposition d'agenda. Sur ce site, ces éléments ne mèneraient nulle
 part.
+
+**La carte s'ajuste à son écran** : 517 px pour les détails, 817 pour le
+calendrier — seul écran qui a besoin de ses trois colonnes —, 717 pour la
+confirmation, 617 pour la carte finale. Une ligne de formulaire étalée sur mille
+pixels ne se lit pas, et la référence fait la même chose.
+
+**Le pied de page et le bouton de la barre sont repeints** pour cette page
+seulement : le bandeau légal passe au noir avec le texte en blanc, et le bouton
+« Book a call » de l'en-tête redevient blanc — le thème le peignait en noir sur
+noir, ses couleurs venant d'un jeu de variables que la page ne peut pas basculer
+depuis son balisage. Le sélecteur passe par `.body-inner`, l'en-tête vivant hors
+du conteneur Barba.
 
 **Un seul écran.** La page ne montre que la réservation : pas de titre, pas de
 description, rien à faire défiler. Le hero prend `calc(100svh - 5.4rem)` — la

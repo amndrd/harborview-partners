@@ -396,3 +396,37 @@
 /* Le thème pose un texte indicatif dans chaque champ en plus du libellé au
    dessus : invisible sur fond blanc, il doublait le libellé sur le noir. */
 .bk-contact .input-field::placeholder { color: #ffffff1f; }
+
+/* ── Largeur de la carte, selon l'écran ────────────────────────────────────
+   Le calendrier a besoin de ses trois colonnes ; les autres écrans, non. Sur
+   la référence, la carte de confirmation fait deux tiers de la largeur du
+   booker : une ligne de formulaire étalée sur mille pixels ne se lit pas. */
+.bk { transition: max-width .35s cubic-bezier(.16, 1, .3, 1); }
+.bk[data-step='qui'] { max-width: 62rem; }
+.bk[data-step='quand'] { max-width: 98rem; }
+.bk[data-step='confirmer'] { max-width: 86rem; }
+.bk[data-step='fait'],
+.bk[data-step='annule'] { max-width: 74rem; }
+
+/* ── Pied de page de la réservation ───────────────────────────────────────
+   La page est noire ; le bandeau légal du thème, blanc, y faisait une barre
+   claire en bas d'écran. Il passe au noir avec le texte en clair, et seul
+   celui de cette page — les autres pages gardent le leur. */
+.main-inner:has(.bk) .footer-wrap,
+.main-inner:has(.bk) .footer { background: #0f0f0f; }
+.main-inner:has(.bk) .footer .txt,
+.main-inner:has(.bk) .footer a,
+.main-inner:has(.bk) .footer p { color: #fafafa; }
+.main-inner:has(.bk) .footer a:hover { opacity: .7; }
+.main-inner:has(.bk) .footer .line { background-color: #262626; }
+
+/* Le bouton de la barre sur cette page : le thème le peint en noir sur noir.
+   Ses couleurs viennent d'un jeu de variables posé par le mode de l'en-tête,
+   que la page ne peut pas basculer depuis son propre balisage — on repeint donc
+   le bouton ici. Le sélecteur passe par .body-inner : l'en-tête vit hors du
+   conteneur Barba, il n'est pas un descendant de la page. */
+.body-inner:has(.bk) .header-act .btn {
+  background: #fafafa;
+  border-color: #fafafa;
+}
+.body-inner:has(.bk) .header-act .btn .txt { color: #0f0f0f; }

@@ -151,27 +151,41 @@
     var stack = document.elementsFromPoint(innerWidth / 2, y)
       .filter(function (e) { return !e.closest('.header'); });
 
-    /* Composition d'arrière en avant, comme le navigateur : chaque surface
-       recouvre le résultat des précédentes à hauteur de sa couverture. Le fond
-       de page est blanc, c'est le point de départ. */
+    /* Composition d'arrière en avant, comme le navigateur. Les surfaces
+       viennent de la pile du test de survol elle-même, parcourue du fond vers
+       l'avant : c'est la seule liste qui dise ce qui est devant à cet instant.
+       Un inventaire constitué au chargement ne le dirait pas — une section
+       encore masquée par l'écran de démarrage n'y figurerait jamais, et la
+       barre resterait sombre sur une page noire.
+
+       Les médias en `pointer-events: none` échappent au test de survol : on les
+       ajoute ensuite, puisqu'ils peignent par-dessus la pile. */
     var L = PAGE;
-    for (var i = 0; i < cands.length; i++) {
-      var el = cands[i];
+    for (var i = stack.length - 1; i >= 0; i--) {
+      var el = stack[i];
       var r = el.getBoundingClientRect();
-      if (r.top > y || r.bottom < y || r.width < innerWidth * MIN_SHARE) continue;
-      if (!peinte(el, stack)) continue;
-      var s = surfacePaint(el, getComputedStyle(el), r.height ? (y - r.top) / r.height : .5);
-      if (s) L = L * (1 - s.a) + s.l * s.a;
+      if (r.width < innerWidth * MIN_SHARE) continue;
+      var s1 = surfacePaint(el, getComputedStyle(el), r.height ? (y - r.top) / r.height : .5);
+      if (s1) L = L * (1 - s1.a) + s1.l * s1.a;
+    }
+    for (var j = 0; j < cands.length; j++) {
+      var m = cands[j];
+      var rm = m.getBoundingClientRect();
+      if (rm.top > y || rm.bottom < y || rm.width < innerWidth * MIN_SHARE) continue;
+      var cs = getComputedStyle(m);
+      if (cs.pointerEvents !== 'none') continue;       // déjà vu dans la pile
+      if (!peinte(m, stack)) continue;
+      var s2 = surfacePaint(m, cs, rm.height ? (y - rm.top) / rm.height : .5);
+      if (s2) L = L * (1 - s2.a) + s2.l * s2.a;
     }
 
-    /* Deux seuils plutôt qu'un : sous 118 le texte passe en blanc, il ne
-       redevient noir qu'au-dessus de 152, et entre les deux il garde la couleur
+    /* Deux seuils plutôt qu'un : sous 122 le texte passe en blanc, il ne
+       redevient noir qu'au-dessus de 158, et entre les deux il garde la couleur
        qu'il avait. Sans cette réserve, la zone de fondu d'une section à l'autre
        fait osciller la barre à chaque image.
 
        On compare à la classe réellement posée, pas à un souvenir : le thème
-       continue de la basculer sur ses propres repères, et il faut pouvoir
-       reprendre la main derrière lui. */
+       continue de la basculer sur ses propres repères. */
     var etait = header.classList.contains('on-dark');
     var dark = L < (etait ? VERS_SOMBRE : VERS_CLAIR);
     if (etait !== dark) header.classList.toggle('on-dark', dark);
@@ -186,6 +200,12 @@
     if (!header) return;
     collect();
     apply();
+    /* L'écran de démarrage couvre la page pendant plusieurs secondes : au
+       premier passage, la section du dessous n'est pas encore peinte et la
+       sonde répond « clair ». Sans défilement pour rattraper l'erreur — sur la
+       page de réservation, il n'y a rien à faire défiler — la barre resterait
+       sombre sur un fond noir. On repasse donc quelques fois pendant l'intro. */
+    [300, 1000, 2000, 4000, 8000].forEach(function (t) { setTimeout(schedule, t); });
     // le thème rebascule la classe sur ses propres repères : on repasse derrière.
     // Une seule surveillance, quel que soit le nombre d'inventaires.
     if (window.MutationObserver && !watching) {
