@@ -377,6 +377,40 @@ remplaçant le contenu sans recharger la page.
 bandeau pendant une conversation (`.hv-chat-open`, posée sur `<html>` par le
 widget) est partie avec lui, et reviendra avec lui.
 
+## Réserver un appel (/contact)
+
+La page de contact est devenue une prise de rendez-vous. Trois écrans dans une
+même carte sombre — `assets/booking.css`, `assets/booking.js` :
+
+1. **Qui appelle** : nom, société, et le service concerné, en pastilles plutôt
+   qu'en liste déroulante — tout est visible d'un coup d'œil.
+2. **Quand** : calendrier à gauche, créneaux à droite, dans la disposition de
+   Cal.com. Mois navigable, jours passés éteints, jour choisi en blanc, point
+   sous la date du jour, bascule 12 h / 24 h.
+3. **Comment** : récapitulatif à gauche (hôte, durée, date, canal, fuseau,
+   service), formulaire à droite — nom, e-mail, notes, et le choix entre Google
+   Meet et appel téléphonique. Le second ouvre le champ du numéro.
+
+**La disponibilité tient dans un seul bloc**, `DISPO` en tête de `booking.js` :
+9 h à 22 h, créneaux de 15 minutes, 2 heures de préavis, 60 jours d'horizon, tous
+les jours de la semaine (`joursOuvres: null` ; mettre `[1,2,3,4,5]` pour s'en
+tenir aux jours ouvrés).
+
+**Rien n'est envoyé nulle part.** Le site est statique : la confirmation affiche
+le récapitulatif et découvre le bloc de contact, mais aucune réservation n'est
+enregistrée et aucun e-mail ne part. Le jour où une vraie prise de rendez-vous
+existera, c'est `envoyer()` qu'il faudra brancher — tout le reste est en place.
+
+**Le bloc de contact est replié, pas masqué.** `display:none` le retirerait du
+flux, et le SplitText du thème — qui découpe les textes au chargement —
+mesurerait une largeur nulle : il posait alors `width: 5px` en ligne sur chaque
+libellé, et le bloc révélé s'affichait à un mot par ligne. Replié par
+`max-height`, il garde sa largeur réelle pendant que le thème le mesure.
+
+De la page d'origine ne restent que le formulaire et son en-tête, sans le motif
+de demande. Carte, bureaux, adresses, hotline, horaires et vignette ont été
+retirés.
+
 ## Ce que contient la copie
 
 | Dossier    | Contenu |
@@ -386,7 +420,7 @@ widget) est partie avec lui, et reviendra avec lui.
 | `app/`     | L'application custom du site (Vite/Rolldown) : Three.js, GSAP, Barba.js, Lenis, Swiper, curseur custom — 34 chunks |
 | `vendor/`  | jQuery et la librairie Finsweet Attributes (47 chunks) |
 | `images/ocean/` | Textures de la scène Three.js de l'accueil |
-| `assets/`  | Les ajouts maison : `hero.css` (police, mise en page et fond du hero), `hero-dots.js` (l'onde), `hero-title-reveal.js` (apparition du titre), `header.css` et `header-contrast.js` (barre de navigation), `logo-glass.css` (marque), le bandeau cookies (`cookie-consent.*`, `cookie.svg`) |
+| `assets/`  | Les ajouts maison : `hero.css` (police, mise en page et fond du hero), `hero-dots.js` (l'onde), `hero-title-reveal.js` (apparition du titre), `header.css` et `header-contrast.js` (barre de navigation), `booking.css` / `booking.js` (réservation d'appel), `logo-glass.css` (marque), le bandeau cookies (`cookie-consent.*`, `cookie.svg`) |
 | `background/` | `sphere.html` — la sphère de points qui a occupé ce fond entre le globe et l'onde ; autonome et réglable, plus câblée dans le site |
 | `serve.mjs` | Serveur statique (URLs propres, `Range` pour les vidéos) |
 

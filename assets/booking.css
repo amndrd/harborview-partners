@@ -1,0 +1,324 @@
+/* ── Réservation d'appel (page /contact) ───────────────────────────────────
+   Trois écrans dans une même carte sombre : qui appelle, quand, et comment.
+   Le calendrier et l'écran de confirmation reprennent la disposition de
+   Cal.com — mois à gauche, créneaux à droite, puis récapitulatif à gauche et
+   formulaire à droite — sur la palette du site.
+
+   La carte est sombre sur une page claire : c'est voulu, c'est le seul bloc
+   interactif de la page et il doit se détacher. Les états sont pilotés par
+   data-step sur .bk, jamais par du style en ligne, pour que tout reste
+   inspectable. */
+
+.bk {
+  --bk-fond: #0d0d0d;
+  --bk-fond-2: #171717;
+  --bk-bord: #ffffff1f;
+  --bk-bord-fort: #ffffff33;
+  --bk-texte: #f4f4f4;
+  --bk-gris: #ffffff8c;
+  --bk-gris-faible: #ffffff40;
+  --bk-actif: #ffffff;
+
+  background: var(--bk-fond);
+  border: 1px solid var(--bk-bord);
+  border-radius: 1.6rem;
+  color: var(--bk-texte);
+  /* La carte ne prend pas toute la largeur du contenu : au-delà, les cases du
+     calendrier — carrées — deviennent des pavés de 150 px. */
+  max-width: 92rem;
+  margin: 0 auto;
+  font-family: var(--font--body, 'Helvetica Neue', Arial, sans-serif);
+  overflow: hidden;
+}
+
+/* Les trois écrans se remplacent : un seul est monté à la fois. */
+.bk-ecran { display: none; }
+.bk[data-step='qui'] .bk-ecran--qui,
+.bk[data-step='quand'] .bk-ecran--quand,
+.bk[data-step='confirmer'] .bk-ecran--confirmer,
+.bk[data-step='fait'] .bk-ecran--fait { display: block; }
+
+/* ── Fil des étapes ─────────────────────────────────────────────────────── */
+.bk-fil {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1.8rem 2.4rem;
+  border-bottom: 1px solid var(--bk-bord);
+  font-size: 1.2rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--bk-gris-faible);
+}
+.bk-fil-item { display: flex; align-items: center; gap: .8rem; }
+.bk-fil-num {
+  width: 2.2rem; height: 2.2rem;
+  display: grid; place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 1.1rem;
+}
+.bk-fil-item.est-actif { color: var(--bk-texte); }
+.bk-fil-item.est-fait { color: var(--bk-gris); }
+.bk-fil-item.est-fait .bk-fil-num { background: var(--bk-gris); border-color: var(--bk-gris); color: var(--bk-fond); }
+.bk-fil-sep { flex: 1; height: 1px; background: var(--bk-bord); }
+
+@media (max-width: 767px) {
+  .bk-fil { padding: 1.4rem 1.6rem; gap: .8rem; font-size: 1rem; }
+  .bk-fil-item span:not(.bk-fil-num) { display: none; }
+}
+
+/* ── Écran 1 : qui appelle ──────────────────────────────────────────────── */
+.bk-corps { padding: 3.2rem 2.4rem; }
+.bk-titre { font-size: 2.4rem; line-height: 1.2; margin: 0 0 .8rem; font-weight: 500; }
+.bk-sous-titre { color: var(--bk-gris); font-size: 1.5rem; margin: 0 0 3.2rem; max-width: 52rem; }
+
+.bk-champ { margin-bottom: 2.4rem; }
+.bk-label {
+  display: block;
+  font-size: 1.3rem;
+  margin-bottom: .8rem;
+  color: var(--bk-texte);
+}
+.bk-label span { color: var(--bk-gris-faible); }
+.bk-input,
+.bk-textarea {
+  width: 100%;
+  background: var(--bk-fond-2);
+  border: 1px solid var(--bk-bord);
+  border-radius: .8rem;
+  color: var(--bk-texte);
+  font: inherit;
+  font-size: 1.5rem;
+  padding: 1.2rem 1.4rem;
+  transition: border-color .2s;
+}
+.bk-textarea { min-height: 10rem; resize: vertical; line-height: 1.45; }
+.bk-input::placeholder, .bk-textarea::placeholder { color: var(--bk-gris-faible); }
+.bk-input:focus, .bk-textarea:focus { outline: none; border-color: var(--bk-bord-fort); }
+.bk-champ.est-fautif .bk-input,
+.bk-champ.est-fautif .bk-textarea,
+.bk-champ.est-fautif .bk-choix { border-color: #ff6b6b80; }
+.bk-erreur { display: none; color: #ff8f8f; font-size: 1.2rem; margin-top: .6rem; }
+.bk-champ.est-fautif .bk-erreur { display: block; }
+
+/* Services : des pastilles plutôt qu'une liste déroulante — tout est visible
+   d'un coup d'œil, et le choix se fait en un geste. */
+.bk-pastilles { display: flex; flex-wrap: wrap; gap: .8rem; }
+.bk-pastille {
+  background: var(--bk-fond-2);
+  border: 1px solid var(--bk-bord);
+  border-radius: 100rem;
+  color: var(--bk-gris);
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.4rem;
+  padding: .9rem 1.6rem;
+  transition: color .2s, border-color .2s, background-color .2s;
+}
+.bk-pastille:hover { color: var(--bk-texte); border-color: var(--bk-bord-fort); }
+.bk-pastille[aria-pressed='true'] {
+  background: var(--bk-actif);
+  border-color: var(--bk-actif);
+  color: #0d0d0d;
+}
+
+/* ── Boutons ────────────────────────────────────────────────────────────── */
+.bk-actions { display: flex; align-items: center; justify-content: flex-end; gap: 1.6rem; margin-top: 3.2rem; }
+.bk-btn {
+  background: var(--bk-actif);
+  border: 1px solid var(--bk-actif);
+  border-radius: .8rem;
+  color: #0d0d0d;
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.4rem;
+  font-weight: 500;
+  padding: 1.1rem 2.2rem;
+  transition: opacity .2s;
+}
+.bk-btn:hover { opacity: .85; }
+.bk-btn--fantome { background: none; border-color: transparent; color: var(--bk-gris); }
+.bk-btn--fantome:hover { color: var(--bk-texte); opacity: 1; }
+
+/* ── Écran 2 : le calendrier, en deux colonnes ──────────────────────────── */
+.bk-quand { display: grid; grid-template-columns: minmax(0, 1fr) 27rem; }
+.bk-cal { padding: 2.4rem; }
+.bk-creneaux { padding: 2.4rem; border-left: 1px solid var(--bk-bord); display: flex; flex-direction: column; }
+
+.bk-cal-tete { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.4rem; }
+.bk-mois { font-size: 1.7rem; font-weight: 500; text-transform: capitalize; }
+.bk-mois em { color: var(--bk-gris); font-style: normal; font-weight: 400; }
+.bk-nav { display: flex; gap: .4rem; }
+.bk-nav button {
+  width: 3.2rem; height: 3.2rem;
+  background: none; border: none; border-radius: .6rem;
+  color: var(--bk-gris); cursor: pointer;
+  display: grid; place-items: center;
+  transition: background-color .2s, color .2s;
+}
+.bk-nav button:hover:not(:disabled) { background: #ffffff14; color: var(--bk-texte); }
+.bk-nav button:disabled { color: var(--bk-gris-faible); cursor: default; }
+
+.bk-jours, .bk-grille { display: grid; grid-template-columns: repeat(7, 1fr); gap: .6rem; }
+.bk-jours {
+  margin-bottom: .8rem;
+  font-size: 1.1rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--bk-gris-faible);
+  text-align: center;
+}
+.bk-case {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  display: grid; place-items: center;
+  border: none; border-radius: .6rem;
+  background: none;
+  color: var(--bk-gris-faible);
+  cursor: default;
+  font: inherit;
+  font-size: 1.4rem;
+  transition: background-color .2s, color .2s;
+}
+.bk-case.est-libre { background: #ffffff14; color: var(--bk-texte); cursor: pointer; }
+.bk-case.est-libre:hover { background: #ffffff26; }
+.bk-case.est-choisi { background: var(--bk-actif); color: #0d0d0d; font-weight: 500; }
+/* Le point sous le chiffre marque aujourd'hui, comme sur la référence. */
+.bk-case.est-aujourdhui::after {
+  content: '';
+  position: absolute;
+  bottom: .5rem; left: 50%;
+  width: .4rem; height: .4rem;
+  margin-left: -.2rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+.bk-case-mois { position: absolute; top: .4rem; font-size: .9rem; letter-spacing: .04em; text-transform: uppercase; color: var(--bk-gris-faible); }
+
+.bk-creneaux-tete { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.6rem; }
+.bk-creneaux-jour { font-size: 1.5rem; }
+.bk-creneaux-jour em { color: var(--bk-gris); font-style: normal; }
+.bk-format { display: flex; background: var(--bk-fond-2); border-radius: .6rem; padding: .2rem; }
+.bk-format button {
+  background: none; border: none; border-radius: .5rem;
+  color: var(--bk-gris); cursor: pointer;
+  font: inherit; font-size: 1.2rem;
+  padding: .5rem 1rem;
+  transition: background-color .2s, color .2s;
+}
+.bk-format button[aria-pressed='true'] { background: #ffffff1f; color: var(--bk-texte); }
+
+.bk-liste { display: flex; flex-direction: column; gap: .8rem; overflow-y: auto; max-height: 42rem; padding-right: .4rem; }
+.bk-liste::-webkit-scrollbar { width: .4rem; }
+.bk-liste::-webkit-scrollbar-thumb { background: var(--bk-bord); border-radius: 1rem; }
+.bk-creneau {
+  background: none;
+  border: 1px solid var(--bk-bord);
+  border-radius: .8rem;
+  color: var(--bk-texte);
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.4rem;
+  padding: 1.2rem;
+  text-align: center;
+  transition: background-color .2s, border-color .2s;
+}
+.bk-creneau:hover { background: #ffffff14; border-color: var(--bk-bord-fort); }
+.bk-vide { color: var(--bk-gris-faible); font-size: 1.4rem; padding: 1.2rem 0; }
+
+@media (max-width: 991px) {
+  .bk-quand { grid-template-columns: 1fr; }
+  .bk-creneaux { border-left: none; border-top: 1px solid var(--bk-bord); }
+  .bk-liste { max-height: 26rem; }
+}
+
+/* ── Écran 3 : confirmation ─────────────────────────────────────────────── */
+.bk-confirmer { display: grid; grid-template-columns: 28rem 1fr; }
+.bk-recap { padding: 2.8rem 2.4rem; border-right: 1px solid var(--bk-bord); }
+.bk-recap-hote { color: var(--bk-gris); font-size: 1.3rem; font-weight: 500; margin-bottom: .6rem; }
+.bk-recap-titre { font-size: 2rem; font-weight: 500; margin: 0 0 2rem; }
+.bk-recap-ligne { display: flex; gap: 1rem; align-items: flex-start; margin-bottom: 1.4rem; font-size: 1.4rem; color: var(--bk-texte); }
+.bk-recap-ligne svg { flex: none; width: 1.6rem; height: 1.6rem; margin-top: .1rem; color: var(--bk-gris); }
+.bk-marque {
+  width: 3.6rem; height: 3.6rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4b4b4b, #d9d9d9);
+  display: grid; place-items: center;
+  color: #0d0d0d; font-size: 1.3rem; font-weight: 700;
+  margin-bottom: 1.4rem;
+}
+.bk-form { padding: 2.8rem 2.4rem; }
+
+/* Type d'appel : deux options, la seconde ouvre le champ du numéro. */
+.bk-choix { display: flex; gap: .8rem; flex-wrap: wrap; }
+.bk-option {
+  flex: 1 1 16rem;
+  display: flex; align-items: center; gap: 1rem;
+  background: var(--bk-fond-2);
+  border: 1px solid var(--bk-bord);
+  border-radius: .8rem;
+  color: var(--bk-gris);
+  cursor: pointer;
+  font: inherit; font-size: 1.4rem;
+  padding: 1.2rem 1.4rem;
+  text-align: left;
+  transition: color .2s, border-color .2s;
+}
+.bk-option svg { width: 1.8rem; height: 1.8rem; flex: none; }
+.bk-option:hover { color: var(--bk-texte); border-color: var(--bk-bord-fort); }
+.bk-option[aria-pressed='true'] { color: var(--bk-texte); border-color: var(--bk-actif); }
+.bk-champ[hidden] { display: none; }
+
+@media (max-width: 991px) {
+  .bk-confirmer { grid-template-columns: 1fr; }
+  .bk-recap { border-right: none; border-bottom: 1px solid var(--bk-bord); }
+}
+
+/* ── Écran final ────────────────────────────────────────────────────────── */
+.bk-fait-corps { padding: 4.8rem 2.4rem; text-align: center; }
+.bk-coche {
+  width: 4.8rem; height: 4.8rem;
+  border-radius: 50%;
+  background: var(--bk-actif);
+  color: #0d0d0d;
+  display: grid; place-items: center;
+  margin: 0 auto 2rem;
+}
+.bk-fait-detail { color: var(--bk-gris); font-size: 1.5rem; margin-top: 1.6rem; line-height: 1.6; }
+.bk-fait-detail strong { color: var(--bk-texte); font-weight: 500; }
+
+@media (max-width: 767px) {
+  .bk-corps, .bk-cal, .bk-creneaux, .bk-recap, .bk-form { padding: 2rem 1.6rem; }
+  .bk-titre { font-size: 2rem; }
+  .bk-actions { flex-direction: column-reverse; align-items: stretch; }
+  .bk-btn { width: 100%; }
+}
+
+/* ── Le bloc de contact, révélé après la réservation ──────────────────────
+   Replié, pas masqué : `display:none` le retirerait du flux, et le SplitText
+   du thème — qui découpe les textes au chargement — mesurerait une largeur
+   nulle. Il posait alors `width: 5px` en ligne sur chaque libellé, et le bloc
+   révélé s'affichait à un mot par ligne. Replié par max-height, il garde sa
+   largeur réelle pendant que le thème le mesure. */
+.bk-contact {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+.bk-contact.est-visible {
+  max-height: none;
+  overflow: visible;
+  opacity: 1;
+  pointer-events: auto;
+  margin-top: 8rem;
+  animation: bk-apparait .6s ease both;
+}
+@keyframes bk-apparait { from { opacity: 0; transform: translateY(1.6rem) } to { opacity: 1; transform: none } }
+
+/* Le conteneur de la page est une grille du thème : le module prend toute la
+   largeur du contenu plutôt qu'une seule colonne. */
+.bk-holder { grid-column: 1 / -1; padding-bottom: 10rem; }
+.bk-contact-tete { margin-bottom: 4rem; }
+.bk-contact-tete .contact-hero-title { margin-bottom: 1.2rem; }
