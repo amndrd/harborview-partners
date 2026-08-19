@@ -161,3 +161,16 @@
   transform: none;
   transition-delay: 200ms;
 }
+
+/* ── Le bouton d'appel à l'action, sur fond sombre ─────────────────────────
+   Ses couleurs viennent d'un jeu de variables que le thème bascule avec la
+   section — mais il le fait après la transition Barba, pas pendant. Au retour
+   sur l'accueil, on voyait donc pendant une seconde une pastille noire sur le
+   hero noir. On la raccroche à `on-dark`, la classe que pose la sonde de
+   contraste dès que le fond change : le bouton suit alors ce qui est peint,
+   sans attendre. */
+.header.on-dark .header-act .btn {
+  background-color: var(--_color---m-white, #fff);
+  border-color: var(--_color---m-white, #fff);
+}
+.header.on-dark .header-act .btn .txt { color: var(--_color---m-black, #111); }

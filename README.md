@@ -109,6 +109,12 @@ dans la feuille du thème (`#w-node-…`) : les échanger demande de reprendre l
 mêmes sélecteurs, ce que fait `header.css` — bornés par plage, car sous 768 px le
 thème range déjà le Menu au bord droit et masque LinkedIn.
 
+**Le bouton d'appel à l'action suit `on-dark`** (`assets/header.css`). Ses
+couleurs viennent d'un jeu de variables que le thème bascule avec la section,
+mais après la transition Barba, pas pendant : au retour sur l'accueil, on voyait
+une seconde une pastille noire sur le hero noir. Raccroché à la classe que pose
+la sonde de contraste, le bouton suit ce qui est peint, sans attendre.
+
 **La couleur suit ce qui passe dessous** — `assets/header-contrast.js`. Une barre
 qui reste pose un problème que le thème n'avait pas à traiter : le texte doit
 rester lisible sur tout ce qui défile derrière. Sa classe `on-dark` était calée
@@ -437,15 +443,23 @@ calendrier — seul écran qui a besoin de ses trois colonnes —, 717 pour la
 confirmation, 617 pour la carte finale. Une ligne de formulaire étalée sur mille
 pixels ne se lit pas, et la référence fait la même chose.
 
-**La barre ne porte que deux choses** sur cette page : le bloc LinkedIn à gauche
-et le bouton Menu à droite, qui reprend la place du bouton « Book a call » —
-retiré, le visiteur y étant déjà. Les onglets sont retirés eux aussi : laissés à
-la charge du thème, qui les remonte dans leur masque, ils laissaient dépasser un
-liseré (33/255 contre 15 pour le fond) visible sur un grand écran sombre. Le bloc
-LinkedIn, lui, n'apparaît d'ordinaire qu'au défilement ; il n'y a rien à faire
-défiler ici, on le découvre donc d'emblée. Le panneau du menu est raccroché par
-la droite : il s'ouvre depuis son ancre vers la droite, et au bord de l'écran il
-sortait de la page en y ajoutant 188 px de défilement horizontal.
+**La barre ne porte que deux choses** sur cette page : le bloc « Follow us on
+github » à gauche et le bouton Menu à droite, à la place qu'il occupe partout
+ailleurs sur le site. Les onglets sont retirés du rendu — laissés à la charge du
+thème, qui les remonte dans leur masque, ils laissaient dépasser un liseré
+(33/255 contre 15 pour le fond) visible sur un grand écran sombre. Le bloc social
+n'apparaît d'ordinaire qu'au défilement ; il n'y a rien à faire défiler ici, on
+le découvre donc d'emblée. Le bouton « Book a call » est retiré : le visiteur y
+est déjà.
+
+**Ces règles suivent l'adresse, pas la présence du module.** La barre vit hors du
+conteneur Barba, et pendant une transition l'ancien conteneur reste affiché une
+seconde et demie : se fier à la présence du module laissait, au retour sur
+l'accueil, le bouton « Book a call » masqué puis blanc sur blanc. `booking.js`
+pose donc une classe `hv-booking` sur `<html>` d'après `location.pathname`, qui
+change dès le début de la transition. L'apparence de la *page*, elle, continue de
+suivre le module : le fond noir doit tenir jusqu'à ce que l'ancien conteneur
+disparaisse.
 
 **Le pied de page et le bouton de la barre sont repeints** pour cette page
 seulement : le bandeau légal passe au noir avec le texte en blanc, et le bouton
