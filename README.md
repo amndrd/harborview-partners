@@ -437,12 +437,23 @@ calendrier — seul écran qui a besoin de ses trois colonnes —, 717 pour la
 confirmation, 617 pour la carte finale. Une ligne de formulaire étalée sur mille
 pixels ne se lit pas, et la référence fait la même chose.
 
+**La barre affiche ses six onglets** sur cette page, et le bouton « Book a call »
+en est retiré — le visiteur y est déjà. Le thème ne découvre les onglets qu'avec
+la classe `show-menu`, qu'il ne pose qu'en haut de l'accueil : ils sont montrés
+ici pour de bon, et la rangée reprend la place du bouton, au ras de la gouttière.
+Sous 992 px, le menu déroulant reprend la main, comme partout ailleurs.
+
 **Le pied de page et le bouton de la barre sont repeints** pour cette page
 seulement : le bandeau légal passe au noir avec le texte en blanc, et le bouton
 « Book a call » de l'en-tête redevient blanc — le thème le peignait en noir sur
 noir, ses couleurs venant d'un jeu de variables que la page ne peut pas basculer
 depuis son balisage. Le sélecteur passe par `.body-inner`, l'en-tête vivant hors
-du conteneur Barba.
+du conteneur Barba. Le texte de la barre suit : il vient de
+`--_color---content--main`, qui vaut ici la version claire, si bien que le
+libellé « Menu » et le nom de la marque restaient en #111 sur le noir.
+
+Le noir est posé sur `.body-inner`, pas seulement sur la section : sous 992 px le
+hero commence à 58 px du haut, et une bande blanche subsistait derrière la barre.
 
 **Un seul écran.** La page ne montre que la réservation : pas de titre, pas de
 description, rien à faire défiler. Le hero prend `calc(100svh - 5.4rem)` — la

@@ -343,6 +343,11 @@
 /* ── La page ───────────────────────────────────────────────────────────────
    Fond de Cal.com, carte centrée, tout dans la hauteur de la fenêtre : la page
    ne montre que la réservation, sans titre ni description. */
+/* Le noir est posé sur toute la page, pas seulement sur la section : en
+   dessous de 992 px, le hero commence à 58 px du haut et une bande blanche
+   restait derrière la barre de navigation. */
+.body-inner:has(.bk),
+.main-inner:has(.bk) { background: #0f0f0f; }
 .contact-hero:has(.bk) {
   background: #0f0f0f;
   color: #d4d4d4;
@@ -430,3 +435,35 @@
   border-color: #fafafa;
 }
 .body-inner:has(.bk) .header-act .btn .txt { color: #0f0f0f; }
+
+/* ── La barre, entière, sur la page de réservation ─────────────────────────
+   Le thème ne découvre les onglets qu'avec la classe `show-menu`, qu'il ne
+   pose qu'en haut de l'accueil : ailleurs ils restent remontés dans leur
+   masque. Ici on les montre pour de bon, et l'on retire le bouton « Book a
+   call » — le visiteur y est déjà. La rangée reprend alors la place du
+   bouton, au ras de la gouttière. */
+.body-inner:has(.bk) .header-menu-list {
+  opacity: 1;
+  pointer-events: auto;
+  right: 2.4rem;
+}
+.body-inner:has(.bk) .header-menu-list .header-link { transform: none; }
+.body-inner:has(.bk) .header-act { display: none; }
+
+@media screen and (max-width: 991px) {
+  /* Sous 992 px le thème rend la main au menu déroulant : on lui laisse. */
+  .body-inner:has(.bk) .header-menu-list { opacity: 0; pointer-events: none; }
+}
+
+/* Le texte de la barre, en clair sur cette page. Le thème le tire de
+   `--_color---content--main`, un jeu de variables qui vaut ici la version
+   claire — la barre restait donc en #111 sur un fond noir, ce qui ne se voyait
+   pas sur les onglets (blancs par une autre règle) mais rendait le libellé
+   « Menu » et le nom de la marque invisibles. Le sélecteur porte une classe de
+   plus que celui du thème : la règle d'origine vit dans un <style> embarqué en
+   fin de corps, donc après cette feuille. */
+.body-inner:has(.bk) .header .header-inner,
+.body-inner:has(.bk) .header .header-inner .txt,
+.body-inner:has(.bk) .header .hv-logo-name,
+.body-inner:has(.bk) .header .header-menu-toggle { color: #fafafa; }
+.body-inner:has(.bk) .header .header-menu-toggle-dot { background-color: #fafafa; }
