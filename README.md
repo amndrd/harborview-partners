@@ -55,45 +55,50 @@ webclips 180/192/512, avatar `hp-avt`, et l'image de partage `OG.jpg`.
 
 - **Bandeau de news** : les liens « Carbon Calculator » et « Live Tracking Portal »
   ont été retirés des 60 pages (bloc `.related-news-links`).
-- **Navigation** : côté droit, en miroir de sa distance au bord gauche.
-  `.header-menu-list` est enfant du conteneur d'en-tête (et non de `.header-menu`)
-  pour se positionner par rapport à l'écran : `right:48rem`, soit les 52rem visés
-  moins les 4rem de marge du conteneur en grille. Miroir exact de 1100 à 1920 px.
-  Elle n'apparaît que sur l'accueil ; les autres pages utilisent le menu déroulant,
-  comme dans le site d'origine.
+- **Navigation** : les six onglets forment une rangée horizontale posée sur l'axe
+  du bouton « Work with us ». Le conteneur de l'en-tête ayant exactement la
+  hauteur du bouton, `top:0` + `bottom:0` + `align-items:center` suffisent à les
+  aligner : aucun décalage à régler, et le centre tombe au pixel près de 768 à
+  1920 px. À droite, la rangée s'arrête une gouttière avant le bouton
+  (`right:22rem`, en rem donc proportionnel). Elle n'est rendue visible qu'à
+  partir de 992 px, où le thème pose `show-menu` sur l'en-tête ; en dessous c'est
+  le menu déroulant qui sert, et sous 768 px le thème la passe en `display:none`.
 - **Hero** : le bloc de contenu (label, titre, description, boutons) prend toute
-  la largeur (`grid-column:1/-1`) et s'aligne à gauche, sur la même marge que le
-  logo. Verticalement, il est centré **entre le bas du logo et le bas de l'écran** :
-  `justify-content:center` avec une réserve haute égale au bas du logo
-  (`padding-top:9.07rem`, `5.7rem` sous 767 px où l'en-tête est plus compact) et
-  une réserve basse nulle. Centre mesuré conforme à la cible au pixel près de 390
-  à 1920 px.
+  la largeur (`grid-column:1/-1`) et se centre — mesuré à 1440 px, les quatre
+  éléments ont leur centre à 720 px. Verticalement, il est centré **entre le bas
+  du logo et le bas de l'écran** : `justify-content:center` avec une réserve
+  haute égale au bas du logo (`padding-top:7.55rem`, `5.7rem` sous 767 px où
+  l'en-tête est plus compact) et une réserve basse nulle.
 
-Le bloc avait d'abord été centré, mais la largeur du titre étant figée sur le mot
-le plus long, le texte visible dérivait jusqu'à ~80 px selon le mot affiché.
-Aligné à gauche, l'aplomb est franc — et la sphère reste dégagée à droite.
+Le bloc a longtemps été calé à gauche, pour deux raisons qui ont disparu : le
+titre à mot cyclé, dont la largeur figée sur le mot le plus long faisait dériver
+le texte visible jusqu'à ~80 px selon le mot affiché, et la sphère de points,
+qu'il fallait laisser dégagée à droite.
 
 ## Titre du hero (accueil)
 
-Sur deux lignes : `Need help` / `with your <mot>?`. Le mot change en boucle toutes
-les 3 s : business → shop → startup → store → company → brand → restaurant → agency.
+Sur deux lignes, dans la casse écrite : `Grow Your Business` / `to New Heights`.
+Aucun `text-transform` — le titre s'affiche tel qu'il est saisi.
 
-- Markup : `<h1 class="need-help-title"><span class="nh-line">…</span><span class="nh-line">with your <span class="need-help-word">business?</span></span></h1>`
-- Animation : `assets/hero-word-cycle.js`, CSS dans le `<style>` embarqué d'`index.html`.
-- Graisse 600 (Outfit SemiBold), la même que le logo.
+- Markup : `<h1 class="need-help-title"><span class="nh-line-mask"><span class="nh-line">Grow Your Business</span></span><span class="nh-line-mask"><span class="nh-line">to New Heights</span></span></h1>`
+- Police : **Sora** (Google Fonts), graisse **370**. Variable de 100 à 800, donc
+  cette graisse est réellement dessinée. Ses deux sous-ensembles latins sont
+  servis depuis `/cdn` comme le reste des polices : aucune requête ne sort vers
+  `fonts.gstatic.com`. Elle a remplacé Bricolage Grotesque, qui n'avait pas
+  d'autre usage dans le site et dont les fichiers sont partis avec elle.
+- Corps en `7vw`, `white-space:nowrap`. Vérifié de 390 à 1920 px : deux lignes,
+  sans débordement — au plus large, 1 339 px de titre pour 1 920 px d'écran.
+- Apparition : `assets/hero-title-reveal.js`, CSS dans le `<style>` embarqué
+  d'`index.html`.
 
 **Ce titre est volontairement hors du système d'animation du thème** (pas de classe
-`heading`) : son SplitText faisait du mot un fragment distinct — il apparaissait
-après sa phrase — et posait une largeur en ligne qui décalait le bloc de 472 px au
-chargement. Apparition et cycle sont donc entièrement gérés par le script.
-
-Le `?` fait partie du mot cyclé (`business?`, `shop?`, …) : il change avec lui au
-lieu de se déplacer.
+`heading`) : son SplitText posait une largeur en ligne qui décalait le bloc de
+472 px au chargement. Apparition et sortie sont donc gérées par le script.
 
 **Apparition** — mêmes réglages que la description juste en dessous : une ligne =
 un balayage, `--bg-progress` 30 → 100 en 1200 ms, quad in-out, 100 ms entre les
 deux lignes. Le dégradé d'une ligne peignant aussi le texte de ses enfants
-(`background-clip:text`), le mot apparaît dans la même coulée que sa phrase.
+(`background-clip:text`), la ligne apparaît d'une seule coulée.
 
 Le déclencheur est le démarrage réel du balayage du bandeau « One operator », pas
 l'attribut `data-init-hidden` : le thème le retire ~400 ms trop tôt.
@@ -101,77 +106,34 @@ l'attribut `data-init-hidden` : le thème le retire ~400 ms trop tôt.
 **Sortie au scroll** — calquée sur celle du reste du hero. Le thème pose la classe
 `on-hidden` sur `.home-hero-text-wrap` dès le scroll et fait remonter chaque ligne
 de `-100%` dans un parent en `overflow:hidden` (`transition:transform .4s`,
-réversible au scroll arrière). Comme le titre n'a plus de `.split-line`, il lui
+réversible au scroll arrière). Comme le titre n'a pas de `.split-line`, il lui
 faut ses propres masques : `.nh-line-mask` reproduit le mécanisme à l'identique.
 Deux différences imposées par la fonte : le masque déborde de `0.13em` vers le bas
-(sinon le jambage du « p » de *help* et *shop* est rogné), marge négative pour ne
-pas toucher à l'interligne ; et la sortie va à `-115%` pour évacuer aussi cette
-réserve.
-
-**Changement de mot** — la vague bleue fait la transition. Deux couches superposées
-aux dégradés complémentaires : à gauche de la vague le nouveau mot, à droite
-l'ancien. Elles sont pilotées par deux variables distinctes (`--nh-out` pour le
-sortant, `--bg-progress` pour l'entrant), décalées de 180 ms : le mot sortant part
-le premier, l'entrant le suit — deux vagues successives plutôt qu'une seule.
-
-**Rien ne bouge.** Le bloc titre a une largeur figée sur sa ligne la plus longue
-(`--nh-width`) et le mot sur le mot le plus long (`--nh-word-width`), tous deux
-calculés par le script. Texte aligné à gauche, bloc centré par `margin:auto`.
+(sinon le jambage du « g » de *Grow* et du « g » de *Heights* est rogné), marge
+négative pour ne pas toucher à l'interligne ; et la sortie va à `-115%` pour
+évacuer aussi cette réserve.
 
 `window.gsap` n'étant pas exposé par le bundle, tout est en `requestAnimationFrame`.
 
-**Mise en page :** le titre s'affranchit de sa colonne (563 px) pour se centrer
-sur la page — `width:100vw` et une marge négative pilotée par `--nh-shift`, que le
-script calcule depuis le décalage du bloc texte et recalcule au redimensionnement.
-Corps en `7vw` avec `white-space:nowrap`. Vérifié de 390 à 1920 px : deux lignes,
-sans débordement, et le bloc ne bouge pas d'un pixel entre le chargement et les
-changements de mot.
-
 ## Arrière-plan du hero (accueil)
 
-Le globe terrestre en Three.js et le ciel étoilé en image ont été remplacés par une
-**sphère de points** dessinée au canvas 2D : des points à la surface *et* à
-l'intérieur d'une sphère, reliés à leurs plus proches voisins. Les liaisons se
-nouent, vivent, se défont et repartent ailleurs. Noir absolu, blanc seul — plus
-aucune couleur de marque dans le hero.
+**Noir plein, rien d'autre.** Le globe terrestre en Three.js et le ciel étoilé en
+image avaient d'abord laissé place à une sphère de points dessinée au canvas 2D ;
+elle est partie à son tour (commits `08fd5f8` et `79e4a39`). Le hero ne porte plus
+aucun calque : `.home-hero` est peint en noir par le thème, et c'est tout ce qui
+reste — le fond mesuré est bien `rgb(0, 0, 0)`.
 
-- Source de référence : `background/sphere.html`, page autonome où se règlent les
-  paramètres. `assets/hero-sphere.js` en est la reprise câblée dans la page ; le
-  bloc `CFG` est identique de part et d'autre, on peut donc régler dans l'une et
-  reporter dans l'autre.
-- Markup : `<div class="hv-bg">` (canvas + voile + vignette + grain), premier
-  enfant de `.home-hero-stick`. Ce parent étant collant, le calque reste fixe
-  pendant les 150 vh du hero, exactement comme le globe qu'il remplace.
-- CSS dans le `<style>` embarqué d'`index.html`.
-
-Trois écarts avec la page de référence, imposés par le site :
-
-- **Le site est une SPA.** Barba récupère les pages en XHR : le hero est un nœud
-  neuf à chaque retour sur l'accueil. Un `MutationObserver` compare le canvas
-  courant à celui de l'instance en cours — nouveau canvas, nouvelle instance ;
-  plus de canvas, on démonte (boucle, `ResizeObserver` et écouteurs compris).
-- **Le glisser est écouté sur `document`.** `.home-hero-text-wrap` couvre toute la
-  largeur du hero par-dessus le canvas (z-index 2) et avalerait les événements. Le
-  canvas reste donc en `pointer-events:none` et l'on teste soi-même si le pointeur
-  est sur la sphère, en laissant passer liens et boutons. Rotation désactivée sous
-  768 px, comme l'était celle du globe.
-- **Le fondu au scroll est rejoué.** Le thème effaçait `.home-hero-globe` et
-  `.home-hero-bg-star` pendant que la section suivante remontait ; ces deux
-  éléments ayant disparu, `hero-sphere.js` reproduit le fondu sur les mêmes bornes
-  (`top top-=20%` → `center top`, au-dessus de 991 px). Il porte sur le canvas et
-  non sur le calque : le noir du fond, lui, doit tenir jusqu'au bout.
-
-**Mobile.** L'accueil affichait une image fixe (`Hero-MB.png`) au lieu du globe.
-L'animation tourne désormais aussi en portrait : la sphère monte en haut de
-l'écran, le texte garde le milieu, et le voile bascule de l'horizontale à la
-verticale (`@media (max-aspect-ratio: 9/10)`).
+La sphère n'est pas perdue pour autant : `background/sphere.html` est la page de
+référence autonome où elle se règle, et donc la copie de côté si elle doit
+revenir. Ce qui a été retiré, c'est son câblage dans la page — `.hv-bg` (canvas,
+voile, vignette, grain), son CSS et `assets/hero-sphere.js`.
 
 **Un squelette masqué subsiste.** La timeline d'intro du thème
 (`app/chunks/Home-*.js`, minifié) cible encore `.home-hero-globe`,
 `.home-hero-canvas`, `.home-hero-globe-shadow`, `.globe-label-text`,
 `.home-hero-bg-star` et `.home-hero-bg-mb`. Un bloc `.hv-theme-hooks` vide et en
-`display:none` lui rend ses cibles : sans lui, GSAP avertit trois fois à chaque
-chargement. Rien n'en sort — c'est le prix à payer pour ne pas toucher au bundle.
+`display:none` lui rend ses cibles. Rien n'en sort — c'est le prix à payer pour ne
+pas toucher au bundle.
 
 Le chargement de Three.js n'est pas supprimé pour autant : `setupGlobe()` sort de
 lui-même faute de `#globe`, mais le moteur reste tiré par la scène océan, plus bas
@@ -266,8 +228,8 @@ widget) est partie avec lui, et reviendra avec lui.
 | `app/`     | L'application custom du site (Vite/Rolldown) : Three.js, GSAP, Barba.js, Lenis, Swiper, curseur custom — 34 chunks |
 | `vendor/`  | jQuery et la librairie Finsweet Attributes (47 chunks) |
 | `images/ocean/` | Textures de la scène Three.js de l'accueil |
-| `assets/`  | `hero-word-cycle.js` (titre du hero) et `hero-sphere.js` (arrière-plan du hero) |
-| `background/` | `sphere.html` — page de référence de l'arrière-plan, autonome et réglable |
+| `assets/`  | Les ajouts maison : `hero-title-reveal.js` (apparition du titre), `header.css` et `logo-glass.css` (barre et marque), le bandeau cookies (`cookie-consent.*`, `cookie.svg`) |
+| `background/` | `sphere.html` — la sphère de points, autonome et réglable ; plus câblée dans le site, gardée comme référence |
 | `serve.mjs` | Serveur statique (URLs propres, `Range` pour les vidéos) |
 
 Tout est **auto-hébergé** : aucune requête ne sort vers le CDN d'origine.
