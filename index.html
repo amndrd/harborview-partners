@@ -505,13 +505,20 @@
   /* ── En-tête ──────────────────────────────────────────────────────────
      Navigation à sa place d'origine, simplement décalée vers la droite
      (3.8rem à l'origine). */
-  /* Navigation à droite, à la même distance du bord droit que sa distance
-     actuelle au bord gauche (52rem, l'unité rem suivant la largeur d'écran,
-     le miroir tient à toutes les largeurs). */
+  /* Navigation en une rangée, sur l'axe du bouton « Work with us » (elle
+     tombait en colonne sous le logo). Le conteneur de l'en-tête a exactement
+     la hauteur du bouton : top:0 + bottom:0 + align-items:center posent donc
+     les onglets sur son axe à toutes les largeurs, sans nombre à régler. À
+     droite, la rangée s'arrête une gouttière avant le bouton. */
   .header-menu-list {
-    top: 3rem;
+    flex-flow: row;
+    align-items: center;
+    column-gap: 3.2rem;
+    padding-top: 0;
+    top: 0;
+    bottom: 0;
     left: auto;
-    right: 48rem;                 /* 52rem visés - 4rem de marge du conteneur */
+    right: 22rem;                 /* ~16rem de bouton + 2.4rem de marge + 3.6rem */
   }
 
   /* ── Hero ─────────────────────────────────────────────────────────────
