@@ -10,7 +10,8 @@
  * tracé. Une tête court après le pointeur, et un tampon circulaire garde ses
  * positions de la dernière seconde. Souris lancée, les relevés s'espacent et
  * l'orbe s'étire le long du geste, tête large et queue effilée ; souris
- * arrêtée, ils se rejoignent et elle se referme.
+ * arrêtée, ils se rejoignent et elle se referme — et comme l'orbe ne vit que
+ * pendant le geste, elle s'efface dans le même mouvement.
  *
  * Les réglages ci-dessous sont mesurés sur la vidéo de référence, pas devinés :
  * détection des points sur sept images, ajustement de cercle sur les crêtes,
@@ -83,7 +84,13 @@
     glowFrom:   .50,            // amplitude à partir de laquelle un point rayonne
     glowSize:   3.2,            // taille du halo, en rayons de point
     glowAlpha:  .24,
-    fadeMs:     420             // fondu de l'influence du pointeur qui s'en va
+    idleDelay:  .12,            // s sans mouvement au bout desquelles l'orbe
+                                // s'éteint. Assez long pour ne pas clignoter
+                                // entre deux événements de déplacement
+    riseMs:     170,            // fondu d'apparition : court, le geste doit être
+    fallMs:     520             // suivi ; et de disparition : plus long, pour que
+                                // l'arrêt se lise comme une extinction, pas comme
+                                // une coupure
   };
 
   var clamp01 = function (v) { return v < 0 ? 0 : v > 1 ? 1 : v; };
@@ -140,6 +147,7 @@
        `power` fait monter et descendre l'ensemble quand le pointeur entre dans le
        hero ou le quitte. */
     var mx = 0, my = 0, power = 0, wanted = 0, seeded = false;
+    var inside = false, lastMove = -99;  // dernier déplacement, sur l'horloge t
     var hx = 0, hy = 0;                  // tête, qui rattrape la cible
     var tx = [], ty = [], tw = [], tsz = [];
     var head = 0, sample = 0;            // index du relevé courant, temps depuis
@@ -368,7 +376,13 @@
       t += dt;
       // l'influence du pointeur monte et descend en douceur : sans ça, la
       // couleur s'allumerait et s'éteindrait d'un coup au bord du hero
-      var step = dt * 1000 / CFG.fadeMs;
+      /* L'orbe n'existe que pendant le geste : le pointeur immobile depuis
+         plus de idleDelay l'éteint, le moindre déplacement la rallume. Le
+         relevé du tracé, lui, continue de tourner — à l'arrêt les positions
+         convergent, donc l'orbe se referme en même temps qu'elle s'efface, et
+         le geste suivant repart d'un point net. */
+      wanted = (inside && t - lastMove < CFG.idleDelay) ? 1 : 0;
+      var step = dt * 1000 / (wanted > power ? CFG.riseMs : CFG.fallMs);
       power += Math.max(-step, Math.min(step, wanted - power));
       follow(dt);
       applyFade();
@@ -408,10 +422,11 @@
         hx = x; hy = y;
         for (var i = 0; i < tx.length; i++) { tx[i] = x; ty[i] = y; }
       }
-      wanted = (x >= 0 && y >= 0 && x <= b.width && y <= b.height) ? 1 : 0;
+      inside = x >= 0 && y >= 0 && x <= b.width && y <= b.height;
+      lastMove = t;
     }
 
-    function onLeave() { wanted = 0; }
+    function onLeave() { inside = false; }
 
     function onVisibility() {
       running = !document.hidden;

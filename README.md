@@ -153,6 +153,13 @@ téléphone au 1920. Le pas de la grille, lui, est en pixels et borné — propo
 l'onde dessine déjà. C'est net sur la référence — les points blancs autour du
 curseur suivent l'arc de la crête, pas un cercle autour du pointeur.
 
+- **L'orbe ne vit que pendant le geste.** Pointeur immobile depuis plus de 120 ms,
+  elle s'éteint ; au moindre déplacement, elle revient. L'apparition est courte
+  (170 ms, le geste doit être suivi) et l'extinction plus longue (520 ms), pour
+  que l'arrêt se lise comme une extinction et non comme une coupure. Le relevé du
+  tracé, lui, continue de tourner : à l'arrêt les positions convergent, donc
+  l'orbe se referme en même temps qu'elle s'efface et le geste suivant repart
+  d'un point net.
 - Éclaircissement dans un rayon de `0,125 D`, **teinte dans un rayon deux fois plus
   large** (`0,28 D`) : la couleur déborde largement la zone éclairée.
 - La teinte se pose **sur** le niveau de l'onde. Entre deux crêtes, le curseur
