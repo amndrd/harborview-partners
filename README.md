@@ -452,14 +452,13 @@ n'apparaît d'ordinaire qu'au défilement ; il n'y a rien à faire défiler ici,
 le découvre donc d'emblée. Le bouton « Book a call » est retiré : le visiteur y
 est déjà.
 
-**Ces règles suivent l'adresse, pas la présence du module.** La barre vit hors du
-conteneur Barba, et pendant une transition l'ancien conteneur reste affiché une
-seconde et demie : se fier à la présence du module laissait, au retour sur
-l'accueil, le bouton « Book a call » masqué puis blanc sur blanc. `booking.js`
-pose donc une classe `hv-booking` sur `<html>` d'après `location.pathname`, qui
-change dès le début de la transition. L'apparence de la *page*, elle, continue de
-suivre le module : le fond noir doit tenir jusqu'à ce que l'ancien conteneur
-disparaisse.
+**Ces règles suivent la présence du module, pas l'adresse.** Pendant une
+transition Barba, l'adresse change avant l'animation : réglée dessus, la barre
+reprenait ses habits d'accueil — bouton « Book a call » compris — alors que la
+page de réservation était encore à l'écran. Le module, lui, disparaît avec son
+conteneur, à la fin de l'animation. Le bouton n'apparaît donc plus avant la
+transition ; et il n'apparaît plus mal peint non plus, ses couleurs suivant
+désormais `on-dark`.
 
 **Le pied de page et le bouton de la barre sont repeints** pour cette page
 seulement : le bandeau légal passe au noir avec le texte en blanc, et le bouton

@@ -427,13 +427,16 @@
 
 
 /* ── La barre sur la page de réservation ──────────────────────────────────
-   Ces règles suivent la classe `hv-booking`, posée sur <html> par booking.js
-   d'après l'adresse courante — et non la présence du module. La barre vit hors
-   du conteneur Barba : pendant une transition, l'ancien conteneur reste affiché
-   une seconde et demie, et se fier au module laissait le bouton « Book a call »
-   masqué puis blanc sur blanc au retour sur l'accueil. L'apparence de la page,
-   elle, continue de suivre le module : le fond doit tenir jusqu'à ce que
-   l'ancien conteneur disparaisse.
+   Ces règles suivent la présence du module, c'est-à-dire ce qui est réellement
+   à l'écran, et non l'adresse. Pendant une transition Barba, l'adresse change
+   avant l'animation : réglée dessus, la barre reprenait ses habits d'accueil —
+   bouton « Book a call » compris — alors que la page de réservation était encore
+   affichée. Le module, lui, disparaît avec son conteneur, à la fin de
+   l'animation.
+
+   Le bouton n'apparaît donc plus avant la transition, et il n'apparaît plus mal
+   peint non plus : ses couleurs suivent maintenant `on-dark` (voir
+   assets/header.css), qui bascule dès que le fond change.
    Deux éléments seulement : le bloc LinkedIn à gauche et le bouton Menu à
    droite. Les onglets sont laissés dans leur état d'origine — le thème les
    garde remontés dans leur masque hors de l'accueil — et le bouton « Book a
@@ -441,12 +444,12 @@
 
    Le bloc LinkedIn, lui, n'apparaît d'ordinaire qu'au défilement ; il n'y a
    rien à faire défiler ici, on le découvre donc d'emblée. */
-.hv-booking .header-act { display: none; }
+.body-inner:has(.bk) .header-act { display: none; }
 /* Les onglets sont retirés, pas seulement remontés : laissés à la charge du
    thème, leur masque laissait dépasser un liseré (33/255 contre 15 pour le
    fond), visible sur un grand écran sombre. */
-.hv-booking .header-menu-list { display: none; }
-.hv-booking .header-linkedin { opacity: 1; transform: none; }
+.body-inner:has(.bk) .header-menu-list { display: none; }
+.body-inner:has(.bk) .header-linkedin { opacity: 1; transform: none; }
 
 /* Le bouton Menu garde la place qu'il a partout ailleurs sur le site : rien
    n'est déplacé ici, le panneau déroulant s'ouvre donc comme il le fait sur les
@@ -459,8 +462,8 @@
    « Menu » et le nom de la marque invisibles. Le sélecteur porte une classe de
    plus que celui du thème : la règle d'origine vit dans un <style> embarqué en
    fin de corps, donc après cette feuille. */
-.hv-booking .header .header-inner,
-.hv-booking .header .header-inner .txt,
-.hv-booking .header .hv-logo-name,
-.hv-booking .header .header-menu-toggle { color: #fafafa; }
-.hv-booking .header .header-menu-toggle-dot { background-color: #fafafa; }
+.body-inner:has(.bk) .header .header-inner,
+.body-inner:has(.bk) .header .header-inner .txt,
+.body-inner:has(.bk) .header .hv-logo-name,
+.body-inner:has(.bk) .header .header-menu-toggle { color: #fafafa; }
+.body-inner:has(.bk) .header .header-menu-toggle-dot { background-color: #fafafa; }

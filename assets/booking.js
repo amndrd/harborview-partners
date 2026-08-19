@@ -375,23 +375,7 @@
   /* ── Accrochage ──────────────────────────────────────────────────────── */
   var monte = null;
 
-  /* Deux signaux, et non un.
-
-     L'habillage de la *page* (fond noir, couleurs) suit la présence du module :
-     pendant une transition Barba, l'ancien conteneur reste affiché un moment, et
-     le fond doit tenir jusqu'à sa disparition.
-
-     L'habillage de la *barre*, lui, suit l'adresse courante. La barre vit hors
-     du conteneur : tant qu'on se fiait à la présence du module, elle gardait ses
-     reglages de reservation une seconde et demie apres le retour a l'accueil —
-     le bouton « Book a call » restait masque, puis reparaissait en blanc sur
-     blanc. L'adresse, elle, change des le debut de la transition. */
-  function surLaPage() {
-    return /^\/contact\/?$/.test(location.pathname);
-  }
-
   function sync() {
-    document.documentElement.classList.toggle('hv-booking', surLaPage());
     var el = document.getElementById('bk');
     if (el && el !== monte) { monte = el; creer(el); }
     if (!el) monte = null;
