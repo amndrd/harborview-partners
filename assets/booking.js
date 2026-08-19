@@ -296,6 +296,8 @@
     for (var i = 0; i < DISPO.horizon && !jourOuvert(d); i++) d.setDate(d.getDate() + 1);
     etat.jour = jourOuvert(d) ? d : null;
     etat.moisVu = etat.jour ? new Date(etat.jour.getFullYear(), etat.jour.getMonth(), 1) : etat.moisVu;
+    var f2 = q('#bk-fuseau-2');
+    if (f2) f2.textContent = fuseau;
     dessineMois();
     dessineCreneaux();
     allerA('qui');

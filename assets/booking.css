@@ -322,3 +322,61 @@
 .bk-holder { grid-column: 1 / -1; padding-bottom: 10rem; }
 .bk-contact-tete { margin-bottom: 4rem; }
 .bk-contact-tete .contact-hero-title { margin-bottom: 1.2rem; }
+
+/* ══ Page noire, en un seul écran ══════════════════════════════════════════
+   La page ne montre plus qu'une chose : la réservation. Le hero occupe la
+   hauteur de la fenêtre et centre la carte — plus de grand titre ni de
+   description à faire défiler avant d'arriver au calendrier. */
+.contact-hero:has(.bk) {
+  background: #000;
+  color: #f4f4f4;
+  /* La hauteur retire le pied de page (une bande de 5,4rem sur cette page) :
+     le tout tient alors dans la fenêtre, sans un pixel à faire défiler. */
+  min-height: calc(100svh - 5.4rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 11rem 0 3rem;
+}
+.contact-hero:has(.bk) .heading,
+.contact-hero:has(.bk) .txt { color: inherit; }
+
+.bk-tete { padding-bottom: 2.4rem; }
+.bk-tete .contact-hero-text-wrap { grid-column: 1 / -1; text-align: center; }
+.bk-tete .heading { margin: 0; }
+
+.bk-holder { padding-bottom: 0; }
+
+/* ── Proportions de la référence ────────────────────────────────────────────
+   1 040 x 490 px sur un écran de 1 440 : trois colonnes, récapitulatif à
+   gauche, mois au milieu, créneaux à droite. */
+.bk { max-width: 125rem; }
+.bk-quand { grid-template-columns: 33rem minmax(0, 1fr) 34rem; }
+.bk-aside { padding: 2.8rem 2.4rem; border-right: 1px solid var(--bk-bord); }
+.bk-cal { padding: 2rem 2.4rem; }
+.bk-creneaux { padding: 2rem 2.4rem; }
+.bk-liste { max-height: 34rem; }
+
+/* Le fil des étapes disparaît de l'écran du calendrier : la référence n'a que
+   la carte, et chaque rangée gagnée est une rangée qui tient dans l'écran. */
+.bk[data-step='quand'] .bk-fil { display: none; }
+
+@media (max-width: 1199px) {
+  .bk-quand { grid-template-columns: minmax(0, 1fr) 30rem; }
+  .bk-aside { display: none; }
+}
+@media (max-width: 991px) {
+  .bk-quand { grid-template-columns: minmax(0, 1fr); }
+  .contact-hero:has(.bk) { min-height: 0; padding: 12rem 0 6rem; }
+}
+
+/* ── Le bloc de contact, sur fond noir ─────────────────────────────────────
+   Il vient du thème en version claire : ses libellés et ses traits sont
+   repeints ici, sinon ils disparaissent sur le noir. */
+.bk-contact .heading,
+.bk-contact .txt,
+.bk-contact .input-field { color: #f4f4f4; }
+.bk-contact .input-field { -webkit-text-fill-color: #f4f4f4; }
+.bk-contact .input-label { color: #ffffff8c; }
+.bk-contact .line { background-color: #ffffff29; }
+.bk-contact .btn { background: #fff; border-color: #fff; color: #000; }

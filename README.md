@@ -384,12 +384,28 @@ même carte sombre — `assets/booking.css`, `assets/booking.js` :
 
 1. **Qui appelle** : nom, société, et le service concerné, en pastilles plutôt
    qu'en liste déroulante — tout est visible d'un coup d'œil.
-2. **Quand** : calendrier à gauche, créneaux à droite, dans la disposition de
-   Cal.com. Mois navigable, jours passés éteints, jour choisi en blanc, point
-   sous la date du jour, bascule 12 h / 24 h.
+2. **Quand** : trois colonnes, comme la référence — récapitulatif à gauche, mois
+   au milieu, créneaux à droite. Mois navigable, jours passés éteints, jour
+   choisi en blanc, point sous la date du jour, bascule 12 h / 24 h. La carte
+   fait 1 042 × 478 px sur un écran de 1 440, aux proportions de Cal.com.
 3. **Comment** : récapitulatif à gauche (hôte, durée, date, canal, fuseau,
    service), formulaire à droite — nom, e-mail, notes, et le choix entre Google
    Meet et appel téléphonique. Le second ouvre le champ du numéro.
+
+**Un seul écran, sur fond noir.** La page ne montre que la réservation : titre
+« Book a call », la carte, rien à faire défiler. Le hero prend
+`calc(100svh - 5.4rem)` — la fenêtre moins la bande du pied de page — si bien que
+le document fait exactement la hauteur de la fenêtre. Vérifié à 1440 × 900,
+1280 × 800, 1920 × 1080 et 1366 × 768 : aucun débordement, à aucune des trois
+étapes.
+
+**La liste des créneaux porte `data-lenis-prevent`.** Sans lui, le défilement
+lissé du thème capte la molette et la liste reste figée — c'est la convention du
+thème pour tout bloc qui défile en interne.
+
+Les services proposés suivent le métier : site, application ou produit web,
+automatisation, gestion et exploitation, marque et contenu, acquisition,
+maintenance — et « Not sure yet » pour ceux qui viennent en discuter.
 
 **La disponibilité tient dans un seul bloc**, `DISPO` en tête de `booking.js` :
 9 h à 22 h, créneaux de 15 minutes, 2 heures de préavis, 60 jours d'horizon, tous
