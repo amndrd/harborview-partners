@@ -76,13 +76,15 @@ webclips 180/192/512, avatar `hp-avt`, et l'image de partage `OG.jpg`.
   Sous 768 px l'unité rem change d'échelle : la colonne y redescend à `36rem` et
   le corps à `1.8rem`, pour trois lignes comme avant. Verticalement, il est centré **entre le bas
   du logo et le bas de l'écran** : `justify-content:center` avec une réserve
-  haute égale au bas du logo (`padding-top:7.55rem`, `5.7rem` sous 767 px où
-  l'en-tête est plus compact) et une réserve basse nulle.
+  haute égale au bas du logo (`padding-top:7.55rem`) et une réserve basse nulle.
+  **Sous 768 px, ce centrage est abandonné** au profit de la disposition de
+  `unitedcarriers.com` — voir [le hero sur téléphone](#le-hero-sur-téléphone).
 
 Le bloc a longtemps été calé à gauche, pour deux raisons qui ont disparu : le
 titre à mot cyclé, dont la largeur figée sur le mot le plus long faisait dériver
 le texte visible jusqu'à ~80 px selon le mot affiché, et la sphère de points,
-qu'il fallait laisser dégagée à droite.
+qu'il fallait laisser dégagée à droite. Le téléphone y est revenu, mais pour une
+autre raison — l'alignement du modèle, décrit plus bas.
 
 ## La barre au défilement
 
@@ -146,6 +148,164 @@ Vérifié en masquant la barre et en mesurant la luminance réelle de la rangée
 écart texte/fond insuffisant. Coût négligeable — 18 surfaces recensées sur
 l'accueil, 2 croisent la barre à un instant donné, 121 images/s en défilement
 continu.
+
+## Sur téléphone : la barre tient, la page ne ripe plus
+
+Sous 768 px, ce n'est plus la fenêtre qui défile mais `.body-inner` : le thème en
+fait un conteneur à part entière (`position:absolute`, `height:100svh`,
+`overflow-y:scroll`). Trois conséquences que le thème ne traitait pas.
+
+**La barre partait sur le côté.** `position:sticky` ne cale une boîte que sur
+l'axe où l'on défile ; dès que ce conteneur pouvait aussi glisser
+horizontalement, logo et bouton Menu partaient avec la page. Et il le pouvait :
+le panneau du menu est garé à droite hors champ (`transform:translate(73%)`), ce
+qui lui donnait 224 px de course latérale. L'`overflow-x:hidden` que le thème
+pose masque le débord mais ne l'empêche pas de défiler — mesuré : `scrollLeft`
+monte bien à 224 et la barre suit, exactement ce qu'on voyait à l'écran. Elle
+passe donc en `position:fixed` (`assets/header.css`) : calée sur la fenêtre, elle
+ignore les deux axes. Elle sort du flux, mais le thème l'y annulait déjà — une
+hauteur de 8.6rem contre `margin-bottom:-8.6rem` —, le hero reste collé à 0.
+Effet de bord bienvenu : le panneau garé, désormais dans une boîte fixe, ne
+compte plus dans la zone défilable du conteneur.
+
+**La rangée ne remonte plus non plus.** Le thème rabat la réserve haute de
+`.header-inner` à 1.2rem dès que `on-scroll` est posée — dans le `<style>`
+embarqué du composant d'en-tête, sous 767 px seulement. La barre, elle, ne
+bougeait plus, mais son contenu sautait de 26 px vers le haut au premier
+mouvement (mesuré : réserve 38 → 12 px, le haut de la marque passant sous le
+bord de l'écran). `header.css` reprend la même valeur pour les deux états, en une
+seule déclaration pour qu'elles ne puissent pas diverger ; le sélecteur y est
+plus spécifique que celui du thème, nécessaire puisque le `<style>` embarqué vit
+en fin de corps. Au-dessus de 767 px la règle du thème est hors de portée et la
+réserve était déjà constante (20,1 px à 768, 21,7 px à 1440).
+
+**Plus rien ne peut sortir par les côtés** — `assets/viewport.css`. `hidden` ne
+suffit pas : la boîte reste défilable, et un `scrollIntoView`, une prise de focus
+ou un glissement du doigt en biais peuvent la faire riper. `clip` rogne au même
+endroit sans créer de boîte défilable, mais ne peut pas être posée sur
+`.body-inner` lui-même : la spec la fait retomber sur `hidden` dès que l'autre axe
+défile (vérifié, Chromium comme WebKit renvoient bien `hidden`). Elle est donc
+posée un cran plus bas, sur les enfants directs, où l'autre axe reste `visible` —
+le seul appariement que la spec laisse tel quel. Même bord de rognage, même
+image ; seul le débord cesse de compter.
+
+Deux réglages viennent avec :
+
+- La **largeur du conteneur** est fixée à 100 %. Le thème le pose en absolu avec
+  `left:0` et rien d'autre : sa largeur est alors celle de son contenu, plafonnée
+  à l'écran mais jamais garantie de l'atteindre. Sur `/get-in-touch`, dont le
+  contenu ne réclamait que 362 px, la page s'arrêtait 31 px avant le bord droit et
+  laissait une bande de fond nue.
+- Le **titre de la section « Insights »** (accueil) avait une largeur figée à
+  80rem que le thème ne reprenait jamais sous le desktop : 800 px de boîte dans
+  une colonne de 361 px. Le texte ne dépassait pas — il porte un `<br/>` qui le
+  casse au bon endroit — mais la boîte, si, et c'était la seconde source de course
+  latérale. Plafonnée à la colonne, coupure inchangée.
+
+Vérifié sur les 41 pages, Chromium et WebKit, écran de 393 px : `scrollWidth`
+égal à `clientWidth` partout (617 → 393 sur l'accueil), `scrollLeft` forcé à 500
+qui retombe à 0, et barre, marque et bouton Menu mesurés aux mêmes coordonnées au
+pixel près à cinq hauteurs de défilement par page — barre `(0, 0)` sur toute la
+largeur, marque à 38 px du haut, Menu à 33 px. Comparaison visuelle avant/après : rien ne bouge
+hormis les phases d'animation (compteur, bandeau photo, image de fond vidéo).
+Au-dessus de 767 px, rien n'est touché — la barre y reste `sticky`.
+
+## Le hero sur téléphone
+
+Sous 768 px, le bloc de contenu reprend la disposition de `unitedcarriers.com`,
+mesurée dans le navigateur à 393 × 852 : **poussé en bas et aligné à gauche**
+plutôt que centré, à une échelle voisine. Le site garde ses polices — c'est le
+placement, les espacements et le calibre qui sont repris, pas le caractère.
+
+| | United Carriers | Harborview, après |
+|---|---|---|
+| Bloc | `flex-end` / `flex-start`, aligné à gauche | idem |
+| Gouttière | 16 px | 16 px (`--container--padding`, 1.6rem) |
+| Réserve haute | 0 | 0 (5.7rem auparavant) |
+| Bas de l'écran → bas des boutons | 32 px | 77 px (voir « le bloc occupe l'écran ») |
+| Rangée de boutons | hauteur 38 | hauteur 39,5 (libellé remonté, voir plus bas) |
+
+Les écarts entre les quatre éléments (8 px sous le bandeau, 32 px sous le titre,
+25 px sous la description) et la pastille des boutons (38 px de haut, réserve
+14/20, rayon plein) étaient déjà identiques : le thème est partagé par les deux
+sites, il n'y avait rien à y reprendre. Ces écarts ont été agrandis depuis, pour
+que le bloc remplisse l'écran — voir « le bloc occupe l'écran » plus bas.
+
+Rien n'est écrit en dur. La gouttière est `--container--padding`, en unité que la
+racine fait varier avec la largeur d'écran — la même mécanique que le modèle, et
+les mêmes nombres à toutes les tailles : 13 px à 320, 15 à 375, 16 à 393, 18 à
+430, relevés sur les deux sites. La réserve basse, elle, est passée en `svh`
+(voir plus bas) : c'est l'unité du hero lui-même, `.home-hero-stick` faisant
+`100svh`, et sur mobile elle ne se confond pas avec `vh` selon que la barre
+d'adresse est repliée ou non.
+
+**Le titre garde son caractère.** Sora 370, casse écrite, et son mécanisme
+d'apparition : c'était le choix retenu — le modèle est en majuscules dans la
+police de titre du thème. Il est en revanche sur trois lignes comme lui, à un
+corps voisin (46,4 contre 48 px).
+
+**L'échelle et la coupure.** Le placement repris, le bloc restait trop petit pour
+l'écran. Le titre se coupe maintenant en **trois lignes sur téléphone** — « Grow »
+/ « Your Business » / « to New Heights » — et passe de `7vw` à **`11.8vw`**,
+soit 27,5 → 46,4 px à 393 (48 px chez le modèle).
+
+Les deux vont ensemble. Le corps est plafonné par la ligne la plus large, chaque
+ligne étant en `white-space:nowrap` ; couper en trois change cette ligne — ce
+n'est plus « Grow Your Business » (9,96 px de large par px de corps) mais « to
+New Heights » (7,84), ce qui laisse monter le corps de deux tiers avant de buter.
+
+La limite retenue n'est pas la colonne mais la description : à 11.8vw le titre
+s'arrête à 379 px du bord gauche, la ligne la plus longue de la description à
+380. Les deux blocs finissent au même endroit, et il reste 12 px avant le bord de
+l'écran. Aller plus loin demanderait de rogner la gouttière. Le rapport tient de
+320 à 767 px sans second réglage, corps et gouttière dérivant tous deux de la
+largeur d'écran.
+
+La coupure vit dans le balisage, en `<br class="nh-break-mb">` neutralisé par
+défaut (`display:none`) et rendu au téléphone : une boîte supprimée ne coupe
+rien, le desktop garde donc ses deux lignes d'origine — vérifié, coordonnées
+identiques au pixel près à 768, 992, 1440 et 1920 px. Un `<br>` plutôt qu'un
+troisième masque : les deux lignes écrites sont aussi les deux unités
+d'animation (apparition en cascade, sortie au scroll dans un parent en
+`overflow:hidden`), et les découper en trois aurait demandé de reprendre ce
+mécanisme. Le `<br>` coupe même sous `white-space:nowrap`, qui ne gouverne que
+les coupures automatiques.
+
+**Le bloc occupe l'écran.** Le titre à son plafond, c'est le reste qui porte la
+hauteur. Corps et respirations sont repris ensemble, dans le rapport du thème
+mais d'un cran au-dessus : le bandeau passe de 1.6 à 2rem, la description de 1.8
+à 2.1rem (quatre lignes au lieu de trois), et les trois écarts de 0.8 / 3.2 /
+2.5rem à 2.4 / 5.6 / 4rem. La réserve basse passe de 3.2rem à `9svh`, pour que le
+bloc ne soit plus collé au bord.
+
+Mesuré à 393 × 852 : le bloc passe de 330 à **430 px, soit 51 % de l'écran** au
+lieu de 39 %, et le vide au-dessus tombe de 417 à 272 px. Il ne peut pas descendre
+beaucoup plus bas sans étirer les écarts au point de défaire le bloc — essayé en
+`space-between` sur toute la hauteur (82 % occupés), le bandeau flottait seul en
+haut et le titre se détachait de la description.
+
+Le libellé des boutons remonte de `1rem` à **`1.2rem`** : le thème le descendait
+à 10 px sur téléphone (`fs-10-mb`), seul texte du hero sous le plancher de
+lisibilité. La rangée passe de 248 à 280 px pour une colonne de 361 — les deux
+pastilles tiennent toujours côte à côte, jusqu'à 320 px d'écran. Bandeau (16 px)
+et description (18 px) ne bougent pas : ils étaient déjà au niveau du modèle,
+voire au-dessus (16 px chez lui pour la description).
+
+**Le téléphone couché.** Toute l'échelle du thème pend à la largeur — la racine
+est en vw, corps et marges en rem la suivent. Un écran large mais bas fait donc
+grandir le bloc au moment où la place manque : mesuré à 667 × 375, l'en-tête
+occupait 123 px à lui seul et le bloc en réclamait 481 pour 375. Ce n'est pas
+nouveau — avant tout ce travail, le titre chevauchait la marque et les deux
+boutons tombaient entièrement hors de l'écran ; l'ancrage par le bas les avait
+ramenés, mais en poussant le titre sous le bord haut.
+
+Sous 520 px de haut, corps et espacements passent donc en `vh` — la même
+mécanique, sur l'axe qui contraint. Le bloc redescend à ~205 px pour 252
+disponibles sous la barre. Le seuil ne peut pas attraper un téléphone debout : le
+plus court encore servi fait 568 px de haut.
+
+Au-dessus de 767 px, rien ne change : mesuré à 768, 992, 1440 et 1920 px, les
+quatre éléments gardent exactement les coordonnées d'avant.
 
 ## Le hero survit aux navigations
 
@@ -521,7 +681,7 @@ retirés.
 | `app/`     | L'application custom du site (Vite/Rolldown) : Three.js, GSAP, Barba.js, Lenis, Swiper, curseur custom — 34 chunks |
 | `vendor/`  | jQuery et la librairie Finsweet Attributes (47 chunks) |
 | `images/ocean/` | Textures de la scène Three.js de l'accueil |
-| `assets/`  | Les ajouts maison : `hero.css` (police, mise en page et fond du hero), `hero-dots.js` (l'onde), `hero-title-reveal.js` (apparition du titre), `header.css` et `header-contrast.js` (barre de navigation), `booking.css` / `booking.js` (réservation d'appel), `logo-glass.css` (marque), le bandeau cookies (`cookie-consent.*`, `cookie.svg`) |
+| `assets/`  | Les ajouts maison : `hero.css` (police, mise en page et fond du hero), `hero-dots.js` (l'onde), `hero-title-reveal.js` (apparition du titre), `header.css` et `header-contrast.js` (barre de navigation), `viewport.css` (la page reste dans l'écran sur téléphone), `booking.css` / `booking.js` (réservation d'appel), `logo-glass.css` (marque), le bandeau cookies (`cookie-consent.*`, `cookie.svg`) |
 | `background/` | `sphere.html` — la sphère de points qui a occupé ce fond entre le globe et l'onde ; autonome et réglable, plus câblée dans le site |
 | `serve.mjs` | Serveur statique (URLs propres, `Range` pour les vidéos) |
 

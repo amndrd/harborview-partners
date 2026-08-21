@@ -60,10 +60,24 @@
 
    Vérifié pour la contrainte décrite plus haut : la hauteur de .header reste
    à son plancher (85 / 79 / 70 px selon la largeur) et le hero reste collé à
-   0 — le supplément de réserve est absorbé, il ne repousse rien. */
+   0 — le supplément de réserve est absorbé, il ne repousse rien.
+
+   Cette réserve tient aussi au défilement. Le thème la rabat à 1.2rem dès que
+   `on-scroll` est posée — `.header.on-scroll .header-inner`, dans le <style>
+   embarqué du composant d'en-tête, sous 767px seulement. La rangée sautait
+   donc de 26 px vers le haut au premier mouvement (mesuré : réserve 38 → 12 px,
+   le haut de la marque passant sous le bord de l'écran), alors que la barre,
+   elle, ne bougeait plus. Le second sélecteur reprend la même valeur : il est
+   plus spécifique que celui du thème, nécessaire ici puisque le <style>
+   embarqué vit en fin de corps et l'emporterait à spécificité égale. Une seule
+   déclaration pour les deux, les valeurs ne peuvent pas diverger.
+
+   Rien à faire au-dessus de 767px : la règle du thème y est hors de portée,
+   la réserve y est déjà constante (mesuré 20,1 px à 768, 21,7 px à 1440). */
 @media screen and (max-width: 767px) {
-  .header-inner {
-    padding-top: 3.8rem; /* le thème pose 1.5rem */
+  .header-inner,
+  .body-inner .header.on-scroll .header-inner {
+    padding-top: 3.8rem; /* le thème pose 1.5rem, puis 1.2rem au défilement */
   }
 }
 
@@ -174,3 +188,31 @@
   border-color: var(--_color---m-white, #fff);
 }
 .header.on-dark .header-act .btn .txt { color: var(--_color---m-black, #111); }
+
+/* ── La barre ne bouge plus, pas même de côté ───────────────────────────────
+   En dessous de 768 px ce n'est plus la fenêtre qui défile mais `.body-inner`
+   — le thème en fait un conteneur à part entière : `position: absolute`,
+   `height: 100svh`, `overflow-y: scroll`. Or `position: sticky` ne cale une
+   boîte que sur l'axe où l'on défile. Dès que ce conteneur pouvait aussi
+   glisser horizontalement, logo et bouton Menu partaient avec la page.
+
+   Et il le pouvait : le panneau du menu est garé à droite hors champ
+   (`transform: translate(73%)`, voir la feuille du thème), ce qui donnait
+   224 px de course latérale à `.body-inner`. Son `overflow-x: hidden` masque
+   le débord mais ne l'empêche pas de défiler — mesuré : `scrollLeft` monte
+   bien à 224, et la barre suit.
+
+   Elle passe donc en `position: fixed` : calée sur la fenêtre, elle ignore les
+   deux axes. Elle sort du flux, mais le thème l'y annulait déjà — une hauteur
+   de 8.6rem contre `margin-bottom: -8.6rem` —, le hero reste donc collé à 0.
+   Effet de bord bienvenu : le panneau garé, désormais dans une boîte fixe, ne
+   compte plus dans la zone défilable du conteneur, qui retrouve exactement la
+   largeur de l'écran. */
+@media screen and (max-width: 767px) {
+  .body-inner > .header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+}

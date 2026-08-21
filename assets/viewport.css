@@ -1,0 +1,51 @@
+/* ── L'affichage reste dans l'écran ────────────────────────────────────────
+   Sous 768 px, `.body-inner` devient le conteneur défilant de la page
+   (`position: absolute`, `height: 100svh`, `overflow-y: scroll`). Le thème lui
+   pose `overflow-x: hidden` en pensant border la page sur les côtés — mais
+   `hidden` ne fait que masquer le débord : la boîte reste défilable, et rien
+   n'empêche le navigateur, un `scrollIntoView`, une prise de focus ou un
+   glissement du doigt légèrement en biais de la faire riper. La page part
+   alors sur la gauche, la barre de navigation avec elle (elle est réglée à
+   part, voir header.css), et on voit le fond blanc du corps sur le côté.
+
+   `clip` est l'autre valeur : elle rogne au même endroit, mais sans créer de
+   boîte défilable — la course latérale n'existe plus. Elle ne peut pas être
+   posée sur `.body-inner` lui-même : la spec fait retomber `clip` sur `hidden`
+   dès que l'autre axe défile (vérifié, Chromium comme WebKit renvoient bien
+   `hidden`). On la pose donc un cran plus bas, sur les enfants directs, où
+   l'autre axe reste `visible` — le seul appariement que la spec laisse tel
+   quel. Le bord de rognage est le même (ces blocs font exactement la largeur
+   de l'écran), l'image ne bouge donc pas ; seul le débord cesse de compter
+   dans la zone défilable du conteneur.
+
+   Mesuré sur l'accueil : `scrollWidth` passe de 617 à 393 px pour un écran de
+   393, et forcer `scrollLeft = 500` laisse la page à 0.
+
+   La largeur du conteneur est fixée dans la foulée. Le thème le pose en
+   absolu avec `left: 0` et rien d'autre : sa largeur est alors celle de son
+   contenu, plafonnée à l'écran — jamais garantie de l'atteindre. Sur
+   /get-in-touch, dont le contenu ne réclame que 362 px, la page s'arrêtait
+   donc 31 px avant le bord droit et laissait une bande de fond nue. */
+@media only screen and (max-width: 767px) {
+  .body-inner {
+    width: 100%;
+  }
+
+  .body-inner > * {
+    overflow-x: clip;
+    overflow-y: visible;
+  }
+}
+
+/* ── Le titre de la section « Insights » ───────────────────────────────────
+   Le thème lui fige une largeur de 80rem, sans jamais la reprendre en dessous
+   du desktop : 800 px de boîte dans une colonne de 361 px sur téléphone. Le
+   texte, lui, ne dépassait pas — il porte un <br/> qui le casse au bon
+   endroit —, mais la boîte, si, et c'était la seconde source de course
+   latérale de l'accueil. On la plafonne à la colonne ; la coupure du titre est
+   inchangée. */
+@media screen and (max-width: 991px) {
+  .home-ins-title {
+    max-width: 100%;
+  }
+}

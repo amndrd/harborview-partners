@@ -47,11 +47,42 @@
   margin-left: auto;
   margin-right: auto;
 }
-/* Le téléphone garde les 7vw d'origine : le titre y est déjà au plus juste,
-   et le réduire encore l'aurait mis au niveau de la description (21,8 px
-   contre 17,9 px à 390 px de large). */
+
+/* Coupure supplémentaire réservée au téléphone : « Grow » / « Your Business » /
+   « to New Heights ». Elle vit dans le balisage, en `<br>` neutralisé par
+   défaut — une boîte supprimée ne coupe rien, le desktop garde donc ses deux
+   lignes d'origine, au pixel près.
+
+   Un `<br>` plutôt qu'un troisième masque : les deux lignes écrites sont aussi
+   les deux unités d'animation (apparition en cascade, sortie au scroll dans un
+   parent en `overflow:hidden` — voir plus bas). Les découper en trois aurait
+   demandé de reprendre ce mécanisme ; un saut de ligne à l'intérieur du premier
+   masque le laisse entier. Le `<br>` coupe même sous `white-space: nowrap`,
+   qui ne gouverne que les coupures automatiques. */
+.nh-break-mb {
+  display: none;
+}
 @media screen and (max-width: 767px) {
-  .need-help-title { font-size: 7vw; }
+  .nh-break-mb {
+    display: inline;
+  }
+}
+/* Le téléphone prend 11.8vw — 46,4 px sur un écran de 393, contre 27,5 px aux
+   7vw d'origine. Le plafond est donné par la ligne la plus large, et la coupure
+   en trois l'a changée : ce n'est plus « Grow Your Business » (9,96 px de large
+   par px de corps) mais « to New Heights » (7,84), ce qui laisse monter le corps
+   de deux tiers avant de buter.
+
+   La limite retenue n'est pas la colonne mais la description : à 11.8vw la ligne
+   du titre s'arrête à 379 px du bord gauche de l'écran, la ligne la plus longue
+   de la description à 380. Les deux blocs finissent donc au même endroit, et il
+   reste 14 px avant le bord. Aller plus loin demanderait de rogner la gouttière.
+
+   Le rapport tient à toutes les largeurs sans second réglage : le corps est en
+   vw et la gouttière en rem, or la racine du thème est elle-même en vw. Vérifié
+   de 320 à 767 px, la ligne occupe partout la même part de l'écran. */
+@media screen and (max-width: 767px) {
+  .need-help-title { font-size: 11.8vw; }
 }
 /* ── En-tête ──────────────────────────────────────────────────────────
    Navigation à sa place d'origine, simplement décalée vers la droite
@@ -94,9 +125,6 @@
   padding-left: var(--container--padding);
   padding-right: var(--container--padding);
 }
-@media screen and (max-width: 767px) {
-  .home-hero-text-wrap { padding-top: 5.7rem; }   /* en-tête plus compact */
-}
 .home-hero-title {
   width: auto;
 }
@@ -122,6 +150,136 @@
 }
 .home-hero-links {
   justify-content: center;
+}
+
+/* ── Téléphone : le bloc se cale en bas à gauche ───────────────────────
+   Calqué sur unitedcarriers.com, mesuré à 393 × 852 : le bloc n'y est pas
+   centré mais poussé en bas (`justify-content:flex-end`), aligné à gauche
+   (`align-items:flex-start`), dans une gouttière de 16 px et à 32 px du bas
+   de l'écran. Les écarts entre les quatre éléments — 8 px sous le bandeau,
+   32 px sous le titre, 25 px sous la description — sont déjà ceux du thème,
+   et la pastille des boutons (38 px de haut, 14/20 de réserve) l'était aussi :
+   il ne reste que l'ancrage et l'alignement à reprendre.
+
+   La gouttière n'a pas de valeur en dur : `--container--padding` vaut 1.6rem
+   sous 768 px, soit exactement les 16 px du modèle.
+
+   La réserve haute tombe à 0 (le thème posait 1.5rem, cette feuille 5.7rem).
+   Elle servait à centrer le bloc entre le bas du logo et le bas de l'écran ;
+   ancré en bas, il n'a plus rien à centrer. Vérifié jusqu'à 320 × 568, le
+   format le plus court encore servi : le haut du bandeau reste sous la barre
+   de navigation, la réserve ne manque à personne. */
+@media screen and (max-width: 767px) {
+  .home-hero-text-wrap {
+    align-items: flex-start;
+    text-align: left;
+    justify-content: flex-end;
+    padding-top: 0;
+    /* 9svh plutôt que les 3.2rem du modèle : le bloc n'est plus collé au bord.
+       `svh` et non `vh` — c'est l'unité du hero lui-même (`.home-hero-stick`
+       fait `100svh`), et sur mobile les deux diffèrent selon que la barre
+       d'adresse est repliée ou non. */
+    padding-bottom: 9svh;
+  }
+
+  /* Le titre porte son propre centrage : `width:max-content` entre deux marges
+     automatiques, chaque ligne centrée dans cette boîte (voir plus haut). Les
+     deux sont repris, sinon la boîte resterait au milieu de la colonne. */
+  .need-help-title {
+    margin-left: 0;
+    text-align: left;
+  }
+
+  .home-hero-links {
+    justify-content: flex-start;
+  }
+
+  /* Libellé des boutons : le thème descend à 1rem sur téléphone (`fs-10-mb`,
+     contre `fs-12` ailleurs). Dix pixels de mono en capitales, c'est le seul
+     texte du hero sous le plancher de lisibilité, et il jurait avec un titre
+     qui vient de doubler de présence. On revient au corps du desktop.
+
+     Mesuré : la rangée passe de 248 à 280 px pour une colonne de 361 — les deux
+     pastilles tiennent toujours côte à côte, jusqu'à 320 px d'écran (228 pour
+     294). Le masque du libellé n'est pas borné en hauteur, rien n'est rogné. */
+  .home-hero-links .btn .txt {
+    font-size: 1.2rem;
+  }
+
+  /* ── Le bloc occupe l'écran ──────────────────────────────────────────
+     Le titre étant à son plafond, c'est le reste qui porte la hauteur. Corps
+     et respirations sont repris ensemble, dans le rapport du thème mais d'un
+     cran au-dessus : le bandeau passe de 1.6 à 2rem, la description de 1.8 à
+     2.1rem (quatre lignes au lieu de trois), et les trois écarts de 0.8 / 3.2 /
+     2.5rem à 2.4 / 5.6 / 4rem.
+
+     Mesuré à 393 × 852 : le bloc passe de 330 à 430 px, soit 51 % de l'écran au
+     lieu de 39 %, et le vide au-dessus tombe de 417 à 272 px. Il ne peut pas
+     descendre beaucoup plus bas sans étirer les écarts au point de défaire le
+     bloc — essayé en `space-between` sur toute la hauteur (82 % occupés), le
+     bandeau flottait seul en haut et le titre se détachait de la description. */
+  .home-hero-label .txt {
+    font-size: 2rem;
+  }
+  .home-hero-label {
+    margin-bottom: 2.4rem;
+  }
+  .home-hero-title {
+    margin-bottom: 5.6rem;
+  }
+  .home-hero-desc .txt {
+    font-size: 2.1rem;
+  }
+  .home-hero-desc {
+    margin-bottom: 4rem;
+  }
+}
+
+/* ── Téléphone couché : le bloc repasse sur l'axe court ────────────────
+   Toute l'échelle du thème pend à la largeur — la racine est en vw, et corps,
+   marges et réserves en rem la suivent. Un écran large mais bas fait donc
+   grandir le bloc au moment précis où la place manque. Mesuré à 667 × 375 :
+   l'en-tête à lui seul occupe 123 px, et le bloc en réclame 481 pour 375
+   disponibles.
+
+   Ce n'est pas nouveau — avant ce réglage, le titre chevauchait la marque et
+   les deux boutons tombaient entièrement hors de l'écran. L'ancrage par le bas
+   les a ramenés, mais en poussant le titre sous le bord haut : dans les deux
+   cas, quelque chose d'utile manquait.
+
+   Sous 520 px de haut, corps et espacements passent donc en vh — la même
+   mécanique, sur l'axe qui contraint. Le bloc redescend à ~205 px pour 252
+   disponibles sous la barre. Le seuil ne peut pas attraper un téléphone
+   debout : le plus court encore servi fait 568 px de haut. */
+@media screen and (max-width: 767px) and (max-height: 520px) {
+  .home-hero-text-wrap {
+    padding-bottom: 4vh;
+  }
+  .home-hero-label {
+    margin-bottom: 1.2vh;
+  }
+  .home-hero-label .txt {
+    font-size: 3.8vh;
+  }
+  .need-help-title {
+    font-size: 8.5vh;
+  }
+  .home-hero-title {
+    margin-bottom: 3vh;
+  }
+  .home-hero-desc {
+    max-width: none;
+    margin-bottom: 3.4vh;
+  }
+  .home-hero-desc .txt {
+    font-size: 3.8vh;
+  }
+  .home-hero-links .btn {
+    padding: 1.8vh 3.6vh;
+  }
+  .home-hero-links .btn .txt {
+    font-size: 3vh;
+  }
 }
 
 /* ── Fond du hero : trame de points parcourue par une onde ─────────────
