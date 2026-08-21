@@ -1,0 +1,440 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Section « Services » — pile de cartes qui se recouvrent au défilement
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Reprise du design de sohub.digital (section services). Leur page est en
+   Next.js + React + Tailwind, animée par GSAP/ScrollTrigger : rien de tout cela
+   ne tourne ici. Ce qui est repris, ce sont les valeurs — relevées dans leur
+   bundle, pas à l'œil — et le comportement. Le rendu est le même, la mécanique
+   est celle de la maison : `position: sticky` pour l'épinglage (c'est déjà
+   celle du thème, voir `.home-hero-stick` et `.home-intro-stick`) et du
+   requestAnimationFrame pour le reste, GSAP n'étant pas exposé par le bundle.
+
+   ── Les unités ────────────────────────────────────────────────────────────
+   Piège principal de la transposition. Tailwind compte en rem sur une racine à
+   16 px ; ici la racine est en vw et vaut 10 px aux largeurs de référence :
+
+     ≥ 992 px   0.57870370373vw   → 10 px à 1728
+     ≤ 991 px   1.0090817356vw    → 10 px à 991
+     ≤ 767 px   2.5445292621vw    → 10 px à 393
+
+   (Les deux paliers suivants du thème, 1660 et 1279, sont commentés dans le
+   <style> embarqué de la page : ils ne s'appliquent pas.)
+
+   Toute valeur de leur feuille est donc convertie **en pixels puis divisée par
+   dix** : leur `text-8xl` (6rem = 96 px) s'écrit ici `9.6rem`.
+
+   Les valeurs ne viennent pas de la lecture de leurs classes mais de la mesure
+   de leur page rendue, et l'écart entre les deux est le piège suivant : leur
+   palier `2xl:` ne se déclenche jamais. Mesuré chez eux à 1200, 1440 et 1728 px,
+   c'est partout le palier `lg:`/`xl:` qui sort — titre à 96 px et non 128,
+   réserve de carte à 64 et non 96, description à 24 et non 30. Transposer leurs
+   classes de plus haut palier aurait donné une section d'un tiers trop grande.
+   Ce qui est repris ici est ce qu'ils affichent, pas ce qu'ils ont écrit.
+
+   Le rendu coïncide donc au pixel aux trois largeurs de référence (vérifié :
+   les 19 mesures concordent à 1728, à 991 et à 393) et suit ensuite l'échelle
+   du thème entre ces largeurs, au lieu de sauter par paliers comme chez eux —
+   seule différence assumée, et elle va dans le sens du reste du site.
+
+   ── Le seuil ──────────────────────────────────────────────────────────────
+   Chez eux la superposition est réservée à `lg:` (1024 px) ; en dessous, simple
+   colonne. Le seuil est ramené à 992 px pour tomber sur la frontière de palier
+   du thème : à 1024 on aurait la colonne du mobile avec la racine du desktop
+   (1rem ≈ 5,9 px), donc une section deux fois trop petite pendant 32 px de
+   large. À 992, le mode de mise en page et l'échelle basculent ensemble.
+
+   Il reste à ce seuil la marche du thème lui-même — la racine passe de 10 à
+   5,74 px d'un pixel de large à l'autre. Elle lui préexiste et vaut pour toute
+   la page (mesuré sur ses propres blocs : la description du hero tombe de 24 à
+   13,8 px, celle de l'intro de 28 à 16,1 px). La section la suit plutôt que d'y
+   échapper : s'en affranchir ici la ferait détonner de tout ce qui l'entoure. */
+
+/* ── La section ──────────────────────────────────────────────────────────── */
+.hv-svc {
+  display: flex;
+  flex-direction: column;
+  /* px-4 / md:px-8 / xl:px-20 — 16, 32 et 80 px chez eux. Le 1.6rem du
+     téléphone retombe exactement sur `--container--padding`, la gouttière du
+     thème à cette largeur : la section s'aligne sur le reste de la page. */
+  padding-left: 1.6rem;
+  padding-right: 1.6rem;
+  position: relative;
+  z-index: 1;
+}
+@media screen and (min-width: 768px) {
+  .hv-svc {
+    padding-left: 3.2rem;
+    padding-right: 3.2rem;
+  }
+}
+@media screen and (min-width: 992px) {
+  .hv-svc {
+    padding-left: 8rem;
+    padding-right: 8rem;
+  }
+}
+
+/* ── Le chapô ────────────────────────────────────────────────────────────── */
+.hv-svc-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem; /* gap-4 */
+}
+@media screen and (min-width: 992px) {
+  .hv-svc-intro {
+    gap: 4rem; /* lg:gap-10 */
+  }
+}
+
+.hv-svc-eyebrow {
+  margin: 0;
+  font-size: 1.6rem; /* text-base */
+  font-weight: 600;
+  line-height: 1.2;
+  color: #a5abad; /* --color-sohub-grey */
+}
+@media screen and (min-width: 768px) {
+  .hv-svc-eyebrow { font-size: 1.8rem; }  /* md:text-lg */
+}
+@media screen and (min-width: 992px) {
+  .hv-svc-eyebrow { font-size: 2rem; }    /* lg:text-xl */
+}
+
+.hv-svc-lead {
+  margin: 0;
+  font-size: 3rem; /* text-3xl */
+  font-weight: 600;
+  line-height: 1; /* leading-none */
+  letter-spacing: -0.075em; /* tracking-7 */
+  color: #0c1016; /* --color-sohub-black */
+}
+@media screen and (min-width: 768px) {
+  .hv-svc-lead { font-size: 4.8rem; }   /* md:text-5xl */
+}
+@media screen and (min-width: 992px) {
+  .hv-svc-lead { font-size: 7.2rem; }   /* xl:text-7xl */
+}
+
+/* Le mot mis en avant : un dégradé qui traverse le texte, pas une couleur.
+   Repris tel quel — `background-clip: text` sur un dégradé sur-dimensionné
+   (200 %), dont on promène la position pendant 5 s. La marge négative compense
+   la réserve à droite, qui existe pour que le dégradé ne soit pas rogné sur la
+   dernière lettre (leur `--spacing` vaut .25rem, soit 4 px : 2 × 4 = 8 px). */
+.hv-svc-word {
+  display: inline;
+  margin-right: -0.8rem;
+  padding-right: 0.8rem;
+  letter-spacing: -0.075em;
+  color: transparent;
+  background: linear-gradient(90deg, #0c1016, #808384, #0c1016) 0 0 / 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: hv-svc-grad 5s infinite;
+}
+@keyframes hv-svc-grad {
+  0%   { background-position: 10% 0; }
+  50%  { background-position: 91% 100%; }
+  100% { background-position: 10% 0; }
+}
+
+/* ── La course et l'épinglage ─────────────────────────────────────────────
+   Chez eux, ScrollTrigger épingle le conteneur des cartes sur `+=250%` à partir
+   du moment où il est centré dans la fenêtre. Transposé sans GSAP :
+
+     .hv-svc-scroll   350vh — 100vh de vitrine + 250vh de course
+     .hv-svc-pin      sticky, 100vh, contenu centré verticalement
+
+   La boîte collante fait une hauteur d'écran dans un bloc qui en fait trois et
+   demie : elle reste donc collée pendant exactement les 250vh restants, ce qui
+   est la valeur de leur `end`. Le centrage vertical du conteneur reproduit leur
+   `start: "center center"`.
+
+   `vh` et non `svh` : ces deux blocs n'existent qu'au-dessus de 992 px, où les
+   deux unités sont égales. Sous ce seuil ils sont neutralisés (voir plus bas) —
+   ce qui règle du même coup le cas du téléphone, où ce n'est pas la fenêtre qui
+   défile mais `.body-inner`, et où `vh` ne voudrait plus dire grand-chose. */
+.hv-svc-scroll {
+  height: auto;
+}
+.hv-svc-pin {
+  position: static;
+  height: auto;
+}
+@media screen and (min-width: 992px) {
+  .hv-svc-scroll {
+    height: 350vh;
+  }
+  .hv-svc-pin {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+}
+
+/* ── Le conteneur des cartes ─────────────────────────────────────────────── */
+.hv-svc-wrap {
+  margin-top: 6.4rem; /* mt-16 */
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 3.2rem; /* gap-8, l'écart de la colonne du mobile */
+}
+@media screen and (min-width: 992px) {
+  .hv-svc-wrap {
+    margin-top: 12.8rem; /* lg:mt-32 */
+    display: block;
+    position: relative;
+    /* Le conteneur est un peu plus haut que les cartes (16/7.5 contre 16/7) :
+       c'est ce demi-point d'écart qui laisse dépasser les tranches de la pile
+       en haut sans que rien ne sorte de la zone épinglée. */
+    aspect-ratio: 16 / 7.5;
+  }
+  /* La marge du conteneur est portée par le bloc de course, sinon elle serait
+     absorbée par le centrage de la boîte collante. */
+  .hv-svc-scroll { margin-top: 12.8rem; }
+  .hv-svc-wrap   { margin-top: 0; }
+}
+
+/* ── Une carte ───────────────────────────────────────────────────────────── */
+.hv-svc-card {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6.4rem;                /* gap-16 */
+  padding: 4.8rem 2.4rem;     /* py-12 px-6 */
+  border-radius: 3.2rem;      /* rounded-4xl */
+  /* Posé chez eux en style inline et jamais animé : il borne les enfants au
+     rayon de la carte pendant qu'elle glisse. */
+  clip-path: inset(0 0 0 0);
+}
+@media screen and (min-width: 992px) {
+  .hv-svc-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    gap: 0;
+    aspect-ratio: 16 / 7;
+    padding: 6.4rem;            /* lg:p-16 */
+    border-radius: 4.8rem;      /* lg:rounded-[3rem] */
+    /* Les cartes ne bougent que par `transform` : on le déclare, la pile en
+       compte quatre et elles se déplacent ensemble. */
+    will-change: transform;
+  }
+  /* Départ hors champ, comme chez eux — mais posé sur toutes sauf la première.
+     Si le script ne se montait pas, une pile entière restée à 120 % ne
+     laisserait qu'un trou de la hauteur de la section : la carte de tête, elle,
+     tient sa place sans que rien n'ait à s'exécuter. */
+  .hv-svc-card:not([data-hv-svc="0"]) {
+    transform: translateY(120%);
+  }
+}
+
+/* Les quatre teintes, relevées une à une dans leur balisage : le fond de la
+   carte, puis celui de ses pastilles, une nuance en dessous. La pile va du
+   presque-noir au gris moyen — c'est ce qui donne la profondeur quand les
+   tranches se superposent. */
+.hv-svc-card[data-hv-svc="0"] { background-color: #0c1016; }
+.hv-svc-card[data-hv-svc="1"] { background-color: #23272d; }
+.hv-svc-card[data-hv-svc="2"] { background-color: #3a3e44; }
+.hv-svc-card[data-hv-svc="3"] { background-color: #50555a; }
+
+.hv-svc-card[data-hv-svc="0"] .hv-svc-tag { background-color: #10141c; }
+.hv-svc-card[data-hv-svc="1"] .hv-svc-tag { background-color: #20242a; }
+.hv-svc-card[data-hv-svc="2"] .hv-svc-tag { background-color: #363a40; }
+.hv-svc-card[data-hv-svc="3"] .hv-svc-tag { background-color: #4c5157; }
+
+/* ── Le titre de la carte ────────────────────────────────────────────────── */
+.hv-svc-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.6rem;
+  position: relative;
+  z-index: 1;
+}
+.hv-svc-title {
+  margin: 0;
+  font-size: 4.8rem; /* text-5xl */
+  line-height: 1;
+  letter-spacing: -0.05em; /* tracking-5 */
+  font-weight: inherit;
+}
+@media screen and (min-width: 992px) {
+  .hv-svc-title { font-size: 9.6rem; }  /* lg:text-8xl */
+}
+/* Deux mots, deux valeurs : le premier porte le titre, le second recule. */
+.hv-svc-title .hv-svc-t1 { color: #fff; }
+.hv-svc-title .hv-svc-t2 { color: #a5abad; }
+
+/* ── Le bas de la carte ──────────────────────────────────────────────────── */
+.hv-svc-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3.2rem; /* gap-8 */
+  margin-top: 3.2rem; /* mt-8 */
+  position: relative;
+  z-index: 1;
+}
+@media screen and (min-width: 992px) {
+  .hv-svc-body { margin-top: 8rem; } /* lg:mt-20 */
+}
+
+.hv-svc-tags {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.8rem; /* gap-2 */
+  user-select: none;
+}
+@media screen and (min-width: 992px) {
+  .hv-svc-tags { flex-wrap: nowrap; } /* lg:flex-nowrap */
+}
+
+.hv-svc-tag {
+  display: inline-block;
+  margin: 0.8rem 0; /* my-2, repris à zéro au desktop */
+  padding: 0.8rem 1.6rem; /* py-2 px-4 */
+  border-radius: 9999px;
+  font-size: 1.4rem; /* text-sm */
+  line-height: 1.4;
+  white-space: nowrap;
+  color: #f0f6f8; /* --color-sohub-white */
+}
+@media screen and (min-width: 992px) {
+  .hv-svc-tag {
+    margin: 0;
+    padding: 0.8rem 2.4rem; /* lg:px-6 */
+    font-size: 1.6rem;      /* lg:text-base */
+  }
+}
+
+.hv-svc-desc {
+  display: flex;
+  flex-direction: row;
+  gap: 1.2rem; /* gap-3 */
+  color: #fff;
+}
+@media screen and (min-width: 992px) {
+  .hv-svc-desc { margin-top: 1.2rem; } /* lg:mt-3 */
+}
+.hv-svc-desc p {
+  width: 100%;
+  margin: -0.4rem 0 0; /* -mt-1 */
+  font-size: 2rem;     /* text-xl */
+  line-height: 1.35;
+}
+@media screen and (min-width: 992px) {
+  .hv-svc-desc p {
+    width: 50vw;
+    font-size: 2.4rem; /* lg:text-2xl */
+  }
+}
+
+/* L'étoile tourne en continu — chez eux une timeline GSAP en rotation de 360°
+   sur 4 s, linéaire et sans fin. En CSS, à l'identique. Elle est masquée sous
+   992 px, comme leur `hidden lg:block`. */
+.hv-svc-star {
+  display: none;
+  flex: none;
+  width: 3.2rem;
+  height: 3.2rem;
+  animation: hv-svc-spin 4s linear infinite;
+}
+@media screen and (min-width: 992px) {
+  .hv-svc-star { display: block; }
+}
+@keyframes hv-svc-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Mouvement réduit ────────────────────────────────────────────────────
+   La pile ne peut pas simplement être figée : les cartes attendent leur tour
+   hors champ, et les laisser là les rendrait invisibles. On rend donc la
+   colonne du téléphone, qui montre les quatre cartes à la suite sans qu'aucune
+   n'ait à bouger. Le script s'efface de son côté. */
+@media (prefers-reduced-motion: reduce) {
+  .hv-svc-scroll { height: auto; }
+  .hv-svc-pin { position: static; height: auto; display: block; }
+  .hv-svc-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 3.2rem;
+    aspect-ratio: auto;
+  }
+  .hv-svc-card {
+    position: relative;
+    aspect-ratio: auto;
+    transform: none !important;
+  }
+  .hv-svc-word,
+  .hv-svc-star { animation: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   La marque et le bouton d'appel restent sombres au-dessus des cartes
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Quand une carte passe derrière la rangée, `header-contrast.js` fait ce qu'il
+   doit : il mesure un fond sombre et bascule la barre en clair. C'est le bon
+   comportement pour les libellés — mais la marque et la pastille « Book a call »
+   sont deux objets pleins, pas du texte : retournés en clair, ils deviennent
+   deux taches blanches sur la carte. Ils gardent donc ici l'habillage qu'ils ont
+   sur fond clair.
+
+   Le crochet est `hv-svc-over`, posé par services-stack.js tant qu'une carte est
+   ce qui passe à la hauteur sondée — la même sonde que celle du script de
+   contraste, pour que tout bascule sur la même image. `on-dark` seul ne suffit
+   pas : il dit que le fond est sombre, pas ce qui le peint, et l'on ne veut
+   rien changer aux sections sombres du thème (le hero, « What's moving in your
+   industry »), qui ne posent pas ce repère.
+
+   Les deux classes sont exigées ensemble, ce qui règle aussi la spécificité :
+   0,4,0 contre les 0,3,0 de `.header:not(.on-dark) .hv-logo` dans
+   logo-glass.css, et 0,5,0 contre les 0,4,0 de `.header.on-dark .header-act
+   .btn` dans header.css. Aucune des deux n'a besoin d'être déplacée. */
+
+/* La marque : les dix variables du verre graphite, reprises telles quelles du
+   bloc `.header:not(.on-dark) .hv-logo` de logo-glass.css. Elles y sont
+   commentées ; les recopier plutôt que d'y toucher évite d'avoir à démonter ce
+   bloc pour deux états qui, ailleurs sur le site, restent bien opposés. */
+.header.on-dark.hv-svc-over .hv-logo {
+  --hv-tint: #0d1216;
+  --hv-fill-edge: 0.94;
+  --hv-fill-core: 0.36;
+  --hv-fill-foot: 0.62;
+  --hv-rim-hi: rgba(255, 255, 255, 0.8);
+  --hv-rim-mid: rgba(255, 255, 255, 0.04);
+  --hv-rim-lo: rgba(255, 255, 255, 0.28);
+  --hv-spec: rgba(255, 255, 255, 0.5);
+  --hv-refract: blur(5px) saturate(60%) brightness(0.92);
+  --hv-shadow: drop-shadow(0 0.15rem 0.4rem rgba(13, 18, 22, 0.22));
+}
+
+/* Le bouton : pastille noire à texte blanc, l'état que lui donne le thème hors
+   `on-dark` (`.header.on-scroll:not(.on-dark) .btn`, dans le <style> embarqué).
+   Repris sans le `on-scroll` : le repère ne peut de toute façon être posé qu'une
+   fois la page défilée jusqu'aux cartes. */
+.header.on-dark.hv-svc-over .header-act .btn {
+  background-color: var(--_color---m-black, #111);
+  border-color: var(--_color---m-black, #111);
+}
+.header.on-dark.hv-svc-over .header-act .btn .txt {
+  color: var(--_color---m-white, #fff);
+}
+/* Et son survol, sous la même condition que celui du thème — sans quoi le
+   bouton reprendrait au passage de la souris la teinte claire qu'on vient de
+   lui retirer. */
+@media (hover: hover) and (min-width: 992px) {
+  .header.on-dark.hv-svc-over .header-act .btn:hover {
+    background-color: var(--_color---secondary);
+    border-color: var(--_color---secondary);
+  }
+}

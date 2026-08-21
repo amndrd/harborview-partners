@@ -475,6 +475,132 @@ sur la page.
 Sept visuels devenus orphelins ont été supprimés du `cdn/` (332 Ko) : les quatre
 tailles du ciel étoilé, les deux du halo du globe, et l'image de repli mobile.
 
+## Section « Services » : la pile de cartes (accueil)
+
+Design repris de [sohub.digital](https://sohub.digital/). La section se glisse
+entre la section claire « We move freight » et la vague qui ferme le blanc juste
+en dessous : le blanc se prolonge, la vague reste sa fermeture. Le contenu est
+celui du modèle, mot pour mot, et attend d'être remplacé — seuls la mécanique et
+l'habillage sont définitifs.
+
+Fichiers : `assets/services-stack.css`, `assets/services-stack.js`, plus le
+balisage dans `index.html`. Le lien vers la feuille n'est posé que sur l'accueil,
+la section n'existant nulle part ailleurs.
+
+### Ce qui est repris, et comment
+
+Leur page est en Next.js + React + Tailwind, animée par GSAP/ScrollTrigger : rien
+de cela ne tourne ici, la transposition est donc une réécriture. Les valeurs, en
+revanche, sont relevées dans leur bundle et sur leur page rendue, pas approchées à
+l'œil :
+
+- trois temps égaux, un par carte qui arrive ;
+- une carte entre depuis `translateY(120 %)` et se pose à 0 ;
+- à chaque arrivée, toutes celles déjà posées remontent de 60 px et perdent 0,05
+  d'échelle — d'où la pile qui dépasse en haut : −60/−120/−180 et 0,95/0,90/0,85 ;
+- la première entre en 1,05 → 1 pendant son approche, avant l'épinglage ;
+- chaque segment est adouci par la détente par défaut de GSAP, `power1.out` ;
+- sous le seuil, aucune superposition : une simple colonne, chaque carte montant
+  de 15 % de sa hauteur en passant de 0,95 à 1.
+
+L'épinglage se fait en `position: sticky` — c'est déjà la mécanique du thème,
+voir `.home-hero-stick` et `.home-intro-stick`. Un bloc de 350 vh contient une
+boîte collante de 100 vh : elle reste donc collée pendant exactement les 250 vh
+restants, la valeur de leur `end`. Le reste est en `requestAnimationFrame`, GSAP
+n'étant pas exposé par le bundle (même constat que pour le titre du hero).
+
+Le script ne lit jamais `scrollY`, seulement des `getBoundingClientRect`. Le
+conteneur défilant de ce site n'est pas toujours la fenêtre — sous 768 px c'est
+`.body-inner`, et Lenis lisse par-dessus — alors qu'un rectangle est relatif à la
+fenêtre quoi qu'il arrive. La même lecture vaut dans les deux cas, sans avoir à
+savoir qui défile.
+
+### Les deux pièges de la transposition
+
+**Les unités.** Tailwind compte en rem sur une racine à 16 px ; la racine du
+thème est en vw et vaut 10 px à ses largeurs de référence (1728, 991 et 393 —
+voir l'en-tête de `services-stack.css` pour la table). Chaque valeur du modèle
+est donc convertie en pixels puis divisée par dix : leur `text-8xl` (96 px)
+s'écrit ici `9.6rem`. Écrire `6rem` aurait donné 60 px.
+
+**Leur palier `2xl:` ne se déclenche jamais.** Mesuré chez eux à 1200, 1440 et
+1728 px, c'est partout le palier `lg:`/`xl:` qui sort : titre à 96 px et non 128,
+réserve de carte à 64 et non 96, description à 24 et non 30. Transposer leurs
+classes de plus haut palier — ce que la lecture du balisage seul aurait donné —
+faisait une section d'un tiers trop grande. Ce qui est repris est ce qu'ils
+affichent, pas ce qu'ils ont écrit.
+
+### Le seuil à 992 px
+
+Chez eux la superposition commence à `lg:` (1024 px). Le seuil est ramené à 992
+pour tomber sur la frontière de palier du thème : à 1024 on aurait la colonne du
+mobile avec la racine du desktop (1rem ≈ 5,9 px), donc une section deux fois trop
+petite pendant 32 px de large. À 992, le mode de mise en page et l'échelle
+basculent ensemble.
+
+Il reste à ce seuil la marche du thème lui-même, la racine passant de 10 à
+5,74 px d'un pixel de large à l'autre. Elle lui préexiste et vaut pour toute la
+page — mesuré sur ses propres blocs, la description du hero tombe de 24 à 13,8 px
+et celle de l'intro de 28 à 16,1 px. La section la suit plutôt que d'y échapper :
+s'en affranchir ici la ferait détonner de tout ce qui l'entoure.
+
+### La marque et le bouton restent sombres sous les cartes
+
+Quand une carte passe derrière la rangée, `header-contrast.js` fait ce qu'il doit :
+il mesure un fond sombre et bascule la barre en clair. C'est juste pour les
+libellés, mais la marque et la pastille « Book a call » sont deux objets pleins,
+pas du texte — retournés en clair, ils deviennent deux taches blanches sur la
+carte. Ils gardent donc l'habillage qu'ils ont sur fond clair : verre graphite
+pour la marque, pastille noire à texte blanc pour le bouton.
+
+`on-dark` seul ne pouvait pas servir de crochet — il dit que le fond est sombre,
+pas ce qui le peint, et l'on ne veut rien changer aux sections sombres du thème.
+`services-stack.js` pose donc une seconde classe, `hv-svc-over`, tant qu'une carte
+est ce qui passe à la hauteur sondée. La sonde est la même que celle du script de
+contraste (55 % de la hauteur de rangée), pour que les deux basculent sur la même
+image : sinon l'on verrait le bouton changer de couleur un cran avant le texte.
+
+Les deux classes sont exigées ensemble dans la feuille, ce qui règle du même coup
+la spécificité — 0,4,0 contre les 0,3,0 de `.header:not(.on-dark) .hv-logo` dans
+`logo-glass.css`, et 0,5,0 contre les 0,4,0 de `.header.on-dark .header-act .btn`
+dans `header.css`. Aucune des deux feuilles n'a eu à bouger. Le survol du bouton
+est repris sous la même condition, sans quoi il reprendrait au passage de la
+souris la teinte claire qu'on vient de lui retirer.
+
+Vérifié sur les quatre cartes, à 1728 comme à 393 px : la marque passe bien en
+`--hv-tint: #0d1216` et le bouton en `rgb(17, 17, 17)` à texte blanc, les libellés
+restant blancs. Au repos sur le hero — sombre lui aussi, mais sans le repère — la
+marque reste en verre clair et le bouton en pastille blanche : rien n'a changé
+hors de la section. Le repère se retire dès que la dernière carte a quitté la
+rangée.
+
+### Vérifié
+
+Les 19 mesures d'habillage — réserves, corps, écarts, rayons, interlettrage,
+largeur et ratio des cartes — concordent au pixel avec la page du modèle à 1728
+et à 393 px, et à 991 px avec son palier `md:`. Entre ces largeurs, la section
+suit l'échelle continue du thème au lieu de sauter par paliers comme chez eux :
+c'est la seule différence assumée, et elle va dans le sens du reste du site.
+
+La pile a été relevée à chaque temps : `−60/−120/−180` et `0,95/0,90/0,85` en
+fin de course, la boîte collante restant à `top: 0` sur toute la traversée.
+
+La barre de navigation suit sans rien y ajouter pour la couleur du texte.
+`header-contrast.js` mesure la
+luminance réellement peinte : les cartes couvrant 91 % de la largeur, il les voit
+et bascule en texte blanc. Le point délicat était le bord franc d'une carte
+sombre traversant la rangée — ce que la page n'avait jamais eu, ses transitions
+étant toutes des fondus. Vérifié par échantillonnage dense du bord de carte
+contre l'état de la barre : la bascule tombe entre y = 50 et y = 45, soit le
+milieu de la bande de glyphes (45–55), sans aucun écart sur la plage. Le modèle,
+lui, a résolu la même question autrement, en donnant à chaque contrôle de sa
+barre sa propre pastille opaque.
+
+Sans JavaScript, la carte de tête garde sa place : le départ hors champ n'est
+posé que sur les trois suivantes. En mouvement réduit, la feuille rend la colonne
+du téléphone et le script s'efface — figer la pile aurait laissé trois cartes
+invisibles.
+
 ## Lancer le site
 
 ```bash
