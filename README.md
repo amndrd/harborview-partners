@@ -601,6 +601,94 @@ posé que sur les trois suivantes. En mouvement réduit, la feuille rend la colo
 du téléphone et le script s'efface — figer la pile aurait laissé trois cartes
 invisibles.
 
+## Section « licence » : l'éventail de cartes (accueil)
+
+Design repris de [heroui.pro](https://heroui.pro/), section « Get your license.
+Start building today. ». Elle se place sous la pile de cartes des services,
+avant la vague. Le contenu est celui du modèle — **à commencer par le surtitre,
+qui porte encore le nom de leur produit.**
+
+Fichiers : `assets/license-card.css`, `assets/license-card.js`, plus le balisage
+dans `index.html`. Comme pour la section précédente, les liens ne sont posés que
+sur l'accueil.
+
+### Ce qui est repris, et comment
+
+Leur page est en Next.js + React + Tailwind, animée par Framer Motion : huit
+valeurs sous ressort dont la carte tire sa rotation, sa brillance et la dérive
+de son texte. Ici, ni React ni Framer Motion — un intégrateur de ressort amorti
+d'une quinzaine de lignes et une boucle `requestAnimationFrame`. Les valeurs
+sont relevées dans leur bundle :
+
+- la position du pointeur est ramenée en pour-cent de la carte, bornée et
+  arrondie ; la rotation vaut ∓(position − 50) / 3,5, soit ±14,3° dans les coins ;
+- le halo suit le pointeur mais les fonds de brillance vont plus vite que lui :
+  `37 + x/100 × 26` et `33 + y/100 × 34` — c'est ce décalage qui donne
+  l'impression que la lumière court sur la surface au lieu de coller au doigt ;
+- la carte grossit de 5 %, son opacité de brillance passe de 0 à 1, son ombre et
+  l'ombre portée du texte suivent la même valeur ;
+- la dérive du texte vaut rotation / 1,8, en sens inverse sur y ;
+- deux ressorts, `{ raideur 180, amortissement 28 }` à l'aller et `{ 120, 22 }`
+  au retour : la carte se repose plus lentement qu'elle ne réagit ;
+- le passage d'un rang au suivant dure 550 ms en `cubic-bezier(.16, 1, .3, 1)`.
+
+L'éventail tient en cinq rangs — centre, ±12 % à −170 px de profondeur, ±26 % à
+−340 px, avec 2,4° et 4,8° de gîte et les deux rangs du fond à 60 % d'opacité.
+Seule la carte de tête reçoit le pointeur ; les autres restent à plat, les
+animer serait du calcul perdu.
+
+La brillance est reprise telle quelle : trois couches dans la même case de
+grille, `hard-light` sur un blanc filtré à zéro, `luminosity` sur un halo radial,
+et `color-dodge` sur l'ensemble. C'est l'empilement des modes de fusion qui donne
+l'irisation ; une seule couche n'aurait donné qu'un reflet blanc.
+
+### Deux perspectives, pas une
+
+Piège de la transposition : leur balisage en porte deux, et elles ne font pas le
+même travail. `perspective: 600px` sur l'enveloppe gouverne la rotation de la
+carte sous le pointeur ; `perspective(1000px)` en tête de la transformation de
+l'emplacement gouverne la profondeur des rangs de l'éventail. Les confondre
+aplatit l'un ou exagère l'autre.
+
+### Ce qui n'a pas été repris
+
+Deux éléments sont leur marque et non leur design : le wordmark « hero » posé en
+haut de la carte, remplacé par la marque du site (`assets/logo.svg`), et leur
+planche d'icônes `pattern-icons.png`, remplacée par une texture neutre en
+data-URI. Cette dernière passe par `--hv-lic-pattern` : y substituer une tuile
+maison ne demande qu'une déclaration.
+
+Leur fond de page est `#f5f5f5` et leur bouton « View pricing » est blanc — sur
+le blanc de cette page il se serait effacé. La section porte donc leur fond,
+étalé sur toute la largeur par un calque en dessous. L'écart avec le blanc est de
+4 % de luminance : assez pour poser le bouton, trop peu pour lire comme un
+bandeau.
+
+### Le mobile
+
+Sous 768 px l'ensemble est réduit à 0,82, la valeur de leur variante mobile. Les
+boutons de rang y passent **par-dessus** l'éventail au lieu de le pousser : en
+rangée ils auraient fait 448 px de large sur un écran de 393 et se seraient
+retrouvés rognés, donc inutilisables. C'est aussi ce que fait le modèle — mesuré
+chez eux à 393 px, les deux pastilles sont posées à 36 px de chaque bord,
+par-dessus les cartes de côté.
+
+### Vérifié
+
+L'habillage concorde au pixel avec leur page à la largeur de référence : colonne
+de 1024, réserve haute de 80, surtitre à 16, titre à 48 avec −0,72 px
+d'interlettrage, carte de 302 × 453 à 20 px de rayon, cadre de 368 × 526,
+pastille de 36 de haut, boutons de rang de 36. Les unités suivent la même
+conversion que la section « Services » (leur racine à 16 px, celle du thème à 10
+aux largeurs de référence : chaque valeur divisée par dix), `translateZ` et
+perspective compris — sans quoi la profondeur resterait fixe pendant que les
+cartes changent de taille.
+
+Au survol : rotation, échelle 1,05, opacité de brillance à 1, halo et grain
+mesurés en place. Le carrousel tourne dans les deux sens et la légende reprend le
+prénom de la carte de tête, lettre à lettre. Neuf largeurs de 320 à 1728, aucun
+débord latéral, aucune erreur console, les autres pages intactes.
+
 ## Lancer le site
 
 ```bash

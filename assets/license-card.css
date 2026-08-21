@@ -1,0 +1,471 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Section « licence » — éventail de cartes holographiques
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Design repris de heroui.pro (section « Get your license. Start building
+   today. »). Leur page est en Next.js + React + Tailwind, animée par Framer
+   Motion : rien de cela ne tourne ici, la transposition est donc une
+   réécriture. Les valeurs viennent de leur bundle et de la mesure de leur page
+   rendue, pas de l'œil.
+
+   Deux éléments n'ont pas été repris, parce qu'ils sont leur marque et non leur
+   design : le wordmark « hero » posé en haut de la carte, remplacé par la marque
+   du site, et leur planche d'icônes `pattern-icons.png`, remplacée par une
+   texture neutre en data-URI (voir --hv-lic-pattern plus bas, prévue pour
+   recevoir une tuile maison sans toucher au reste).
+
+   ── Les unités ────────────────────────────────────────────────────────────
+   Même conversion que pour la section « Services » : leur racine est à 16 px,
+   celle du thème est en vw et vaut 10 px à ses largeurs de référence (1728, 991
+   et 393). Chaque valeur mesurée est donc divisée par dix — leur carte de
+   302 × 453 px s'écrit ici 30.2rem × 45.3rem.
+
+   La perspective et les `translateZ` de l'éventail suivent la même règle
+   (1000px → 100rem, -170px → -17rem) : sans cela la profondeur resterait fixe
+   pendant que les cartes changent de taille, et l'éventail se déformerait d'une
+   largeur à l'autre. */
+
+/* ── La section ──────────────────────────────────────────────────────────── */
+.hv-lic {
+  /* Leur fond de page est #f5f5f5, pas blanc — et le bouton « View pricing »
+     est blanc. Sur le blanc de cette page il se serait effacé : on reprend donc
+     leur fond sur la section. L'écart avec le blanc est de 4 % de luminance,
+     assez pour poser le bouton, trop peu pour lire comme un bandeau. */
+  background-color: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 102.4rem; /* max-w-5xl = 1024px */
+  margin-inline: auto;
+  padding: 8rem 2.4rem 0; /* pt-20 px-6 */
+  position: relative;
+  z-index: 1;
+}
+/* Le fond doit couvrir toute la largeur, pas seulement la colonne de 1024 :
+   on l'étale par un calque en dessous plutôt qu'en cassant le `max-width`. */
+.hv-lic::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  background-color: #f5f5f5;
+}
+
+/* ── Le chapô ────────────────────────────────────────────────────────────── */
+.hv-lic-eyebrow {
+  margin: 0;
+  font-size: 1.6rem; /* text-base */
+  font-weight: 500;
+  line-height: normal;
+  text-align: center;
+  color: #0485f7; /* --accent */
+}
+.hv-lic-head {
+  margin-top: 0.8rem; /* mt-2 */
+  text-align: center;
+}
+.hv-lic-head p {
+  margin: 0;
+  font-size: 4.8rem; /* text-5xl */
+  line-height: normal;
+  letter-spacing: -0.072rem; /* tracking-[-0.72px] */
+}
+.hv-lic-h1 { color: #18181b; }
+/* La seconde ligne est la même teinte à 70 %, pas un gris plus clair : c'est ce
+   qui la fait reculer sans qu'elle change de famille. */
+.hv-lic-h2 { color: rgba(113, 113, 123, 0.7); }
+
+@media screen and (max-width: 767px) {
+  .hv-lic-eyebrow { font-size: 1.4rem; }  /* max-md:text-sm */
+  .hv-lic-head p  { font-size: 3.6rem; }  /* max-md:text-4xl */
+}
+
+/* ── Le plateau et sa navigation ─────────────────────────────────────────── */
+.hv-lic-deck {
+  margin-top: 4rem; /* mt-10 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.6rem;
+  width: 100%;
+  /* L'éventail déborde volontairement de la scène (les cartes de côté sont
+     rejetées à ±26 %) : on rogne ce débord ici plutôt que de le laisser
+     atteindre la page. Cette page a déjà eu à être défendue contre la course
+     latérale — voir assets/viewport.css — et un débord de plus la rouvrirait. */
+  overflow-x: clip;
+}
+
+.hv-lic-stage {
+  position: relative;
+  isolation: isolate;
+  flex: none;
+  width: 36.8rem;  /* 368px */
+  height: 48rem;   /* 480px */
+}
+
+/* Chaque emplacement de l'éventail : centré dans la scène, puis poussé à sa
+   place par la transformation que lui pose le script. Seule la carte de tête
+   reçoit le pointeur, les autres le laissent passer. */
+.hv-lic-slot {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: fit-content;
+  height: fit-content;
+  pointer-events: none;
+  /* La bascule d'un rang au suivant, à l'easing de leur `layout` :
+     { duration: .55, ease: [.16, 1, .3, 1] }. */
+  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hv-lic-slot[data-hv-lic-rank="0"] .hv-lic-wrapper { pointer-events: auto; }
+
+/* Deux perspectives, et elles ne font pas le même travail. Celle-ci, 600px chez
+   eux, gouverne la rotation de la carte sous le pointeur. Celle de l'éventail —
+   `perspective(100rem)` en tête de la transformation que le script pose sur
+   l'emplacement — gouverne la profondeur des rangs. Les confondre aplatirait
+   l'un ou exagérerait l'autre. */
+.hv-lic-wrapper {
+  perspective: 60rem;           /* 600px */
+  transform-origin: 50%;
+  transform-style: preserve-3d;
+  touch-action: none;
+  display: grid;
+}
+.hv-lic-rotator {
+  transform-origin: 50%;
+  transform-style: preserve-3d;
+  will-change: transform;
+  pointer-events: auto;
+  display: grid;
+}
+/* Leur parade contre les bords crénelés des couches 3D : un contour
+   transparent d'un pixel force un rendu détouré propre. Repris tel quel. */
+.hv-lic-rotator,
+.hv-lic-frame,
+.hv-lic-holo,
+.hv-lic-inset {
+  outline: 1px solid transparent;
+}
+
+.hv-lic-frame {
+  grid-area: 1 / 1;
+  position: relative;
+  width: 36.8rem;   /* 368px */
+  height: 52.6rem;  /* 526px */
+  cursor: default;
+  overflow: clip;
+}
+
+/* ── La carte elle-même ──────────────────────────────────────────────────── */
+.hv-lic-holo {
+  z-index: 1;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30.2rem;   /* 302px */
+  height: 45.3rem;  /* 453px */
+  padding-top: 5rem;
+  border-radius: 2rem;
+  background: var(--hv-lic-gradient, linear-gradient(to bottom, #313131, #1e1e1e));
+  /* L'ombre ne se pose qu'au survol : elle suit --hv-lic-opacity, qui vaut 0 au
+     repos. La carte est donc à plat tant qu'on ne la touche pas. */
+  box-shadow: 0 0.4rem 1.6rem rgba(0, 0, 0, calc(0.12 * var(--hv-lic-opacity, 0))),
+              0 1.2rem 3.2rem rgba(0, 0, 0, calc(0.08 * var(--hv-lic-opacity, 0)));
+  transition: box-shadow 0.15s;
+  transform-style: preserve-3d;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: clip;
+}
+
+.hv-lic-inset {
+  z-index: 1;
+  position: absolute;
+  inset: 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 1.2rem;
+  overflow: clip;
+}
+
+.hv-lic-logo {
+  z-index: 10;
+  isolation: isolate;
+  position: absolute;
+  top: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.hv-lic-logo svg {
+  display: block;
+  height: 2.4rem;
+  width: auto;
+}
+.hv-lic-logo path { fill: #fcfcfc; }
+
+/* Le bloc d'identité et celui du bas sont poussés d'un cran vers le lecteur
+   (translateZ) : c'est ce décalage qui les fait glisser sur la carte quand elle
+   tourne, sans qu'on ait à les animer séparément. Le script leur ajoute en plus
+   une dérive proportionnelle à la rotation — leur `textParallax`. */
+.hv-lic-id {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 20;
+  transform: translate(-50%, -50%) translateZ(1rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.hv-lic-name,
+.hv-lic-tier {
+  display: block;
+  width: 27.4rem;
+  text-align: center;
+  /* L'ombre portée du texte suit elle aussi le survol. */
+  text-shadow: 0 0.4rem 2.4rem rgba(0, 0, 0, calc(0.55 * var(--hv-lic-opacity, 0)));
+}
+.hv-lic-name {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #fff;
+}
+.hv-lic-tier {
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.hv-lic-meta {
+  position: absolute;
+  bottom: 10%;
+  z-index: 20;
+  transform: translateZ(1rem);
+  display: flex;
+  width: 22rem;
+  justify-content: space-between;
+}
+.hv-lic-meta > div { display: flex; flex-direction: column; }
+.hv-lic-meta > div:last-child { align-items: flex-end; }
+.hv-lic-k {
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.3);
+}
+.hv-lic-v {
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* ── La brillance ────────────────────────────────────────────────────────
+   Trois couches empilées dans la même case de grille, chacune avec son mode de
+   fusion — c'est ce qui donne l'irisation plutôt qu'un simple reflet blanc :
+
+     :before   blanc filtré à zéro, en `hard-light` — assombrit et durcit
+     :after    un halo radial centré sur le pointeur, en `luminosity`
+     la boîte  elle-même en `color-dodge`, ce qui rallume le tout
+
+   Les deux fonds se déplacent plus vite que le pointeur (× 2.6 en x, × 3.5 en
+   y) : c'est ce décalage qui donne l'impression que la lumière court sur la
+   surface au lieu de rester collée au doigt. */
+.hv-lic-shine {
+  z-index: 6;
+  position: absolute;
+  inset: 0;
+  display: grid;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--hv-lic-opacity, 0);
+  will-change: opacity;
+  filter: brightness(1.25) contrast(1.1) saturate(1.2);
+  mix-blend-mode: color-dodge;
+  background-blend-mode: overlay;
+  background-size: 400% 400%, cover;
+  background-position:
+    calc(((50% - var(--hv-lic-bg-x, 50%)) * 2.6) + 50%)
+    calc(((50% - var(--hv-lic-bg-y, 50%)) * 3.5) + 50%),
+    center center;
+}
+.hv-lic-shine::before,
+.hv-lic-shine::after {
+  content: "";
+  grid-area: 1 / 1;
+  border-radius: inherit;
+}
+.hv-lic-shine::before {
+  background-color: #fff;
+  background-image: none;
+  background-position: 0 0;
+  background-repeat: repeat;
+  background-size: 200% 200%, 200% 200%;
+  background-blend-mode: screen;
+  filter: brightness(0) contrast(1.1);
+  mix-blend-mode: hard-light;
+}
+.hv-lic-shine::after {
+  background-image: radial-gradient(
+    farthest-corner circle at var(--hv-lic-x, 50%) var(--hv-lic-y, 50%),
+    #b8b8b8 0%,
+    #c7c7c730 25%,
+    #000 90%
+  );
+  background-position: 50%;
+  background-size: cover;
+  mix-blend-mode: luminosity;
+  filter: brightness(0.5) contrast(2);
+}
+
+/* La texture sous la brillance. Chez eux, une planche de leurs propres icônes ;
+   ici une tuile neutre — un semis de points et de traits fins qui joue le même
+   rôle sous le mode `soft-light`, sans emprunter leur dessin. Elle passe par une
+   variable : y substituer une tuile maison ne demande qu'une déclaration. */
+.hv-lic-pattern {
+  z-index: 2;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0.9;
+  mix-blend-mode: soft-light;
+  background-image: var(--hv-lic-pattern, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%23fff' stroke-width='.9' opacity='.42'%3E%3Ccircle cx='8' cy='7' r='2.2'/%3E%3Ccircle cx='33' cy='18' r='1.6'/%3E%3Ccircle cx='19' cy='38' r='2'/%3E%3Ccircle cx='43' cy='41' r='1.4'/%3E%3Cpath d='M24 4l3.2 3.2L24 10.4 20.8 7.2z'/%3E%3Cpath d='M6 26l2.4 2.4L6 30.8 3.6 28.4z'/%3E%3Cpath d='M38 30l2.2 2.2-2.2 2.2-2.2-2.2z'/%3E%3Cpath d='M13 15h5M28 43h6M44 9v5M2 40v4M31 27h4'/%3E%3C/g%3E%3Cg fill='%23fff' opacity='.3'%3E%3Ccircle cx='40' cy='4' r='.9'/%3E%3Ccircle cx='15' cy='24' r='.9'/%3E%3Ccircle cx='27' cy='33' r='.8'/%3E%3Ccircle cx='4' cy='16' r='.8'/%3E%3Ccircle cx='46' cy='24' r='.8'/%3E%3Ccircle cx='22' cy='47' r='.8'/%3E%3Ccircle cx='36' cy='11' r='.7'/%3E%3Ccircle cx='10' cy='45' r='.7'/%3E%3C/g%3E%3C/svg%3E"));
+  background-position: 50%;
+  background-repeat: repeat;
+  background-size: 6.4rem;
+}
+
+/* ── Les boutons de rang ─────────────────────────────────────────────────── */
+.hv-lic-nav {
+  flex: none;
+  width: 3.6rem;
+  height: 3.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background-color: #ebebec;
+  color: #71717a;
+  cursor: pointer;
+  padding: 0;
+  z-index: 30;
+  transition: background-color 0.2s;
+}
+.hv-lic-nav:hover { background-color: #e0e0e2; }
+.hv-lic-nav svg { display: block; width: 1.6rem; height: 1.6rem; }
+
+/* ── La légende et l'appel à l'action ────────────────────────────────────── */
+.hv-lic-foot {
+  margin-top: 3.2rem; /* mt-8 */
+  padding-bottom: 1.6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.6rem;
+}
+@media screen and (min-width: 768px) {
+  .hv-lic-foot { margin-top: 2.4rem; } /* sm:mt-6 */
+}
+.hv-lic-note {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 400;
+  line-height: 1.34;
+  text-align: center;
+  color: #71717a;
+}
+/* Chaque lettre entre pour elle-même, d'un flou vers le net — c'est leur
+   animation à l'apparition du nom. Le script pose le décalage lettre à lettre. */
+.hv-lic-note span {
+  display: inline-block;
+  white-space: pre;
+}
+.hv-lic-note[data-hv-lic-anim] span {
+  opacity: 0;
+  filter: blur(4px);
+  animation: hv-lic-letter 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--d, 0s);
+}
+@keyframes hv-lic-letter {
+  to { opacity: 1; filter: blur(0); }
+}
+
+.hv-lic-cta {
+  margin-top: 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 3.6rem;
+  padding: 0 1.6rem;
+  border-radius: 9999px;
+  background-color: #fff;
+  color: #18181b;
+  font-size: 1.4rem;
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  box-shadow: 0 0.2rem 0.4rem rgba(0, 0, 0, 0.04),
+              0 0.1rem 0.2rem rgba(0, 0, 0, 0.06),
+              0 0 0.1rem rgba(0, 0, 0, 0.06);
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+.hv-lic-cta:hover {
+  background-color: #fafafa;
+  box-shadow: 0 0.3rem 0.8rem rgba(0, 0, 0, 0.08),
+              0 0.1rem 0.2rem rgba(0, 0, 0, 0.06);
+}
+
+/* ── Sous 768 px ─────────────────────────────────────────────────────────
+   La scène fait 36.8rem de large, soit 368 px à 393 d'écran : l'éventail, qui
+   s'étale à ±26 %, n'y tient pas. Eux réduisent l'ensemble à 0,82 ; on reprend
+   la valeur, appliquée à la scène seule pour que les boutons de rang gardent
+   leur taille de doigt. */
+@media screen and (max-width: 767px) {
+  .hv-lic-stage {
+    transform: scale(0.82);
+    transform-origin: center;
+    /* La boîte garde sa taille d'avant réduction et laisserait un blanc en bas :
+       on la ramène à la hauteur réellement occupée (480 × 0,82 = 393,6). */
+    margin-block: -4.32rem;
+  }
+
+  /* Les boutons de rang passent par-dessus l'éventail au lieu de le pousser.
+     En rangée, l'ensemble ferait 3.6 + 36.8 + 3.6 = 44 rem de large — 448 px
+     sur un écran de 393 — et les deux boutons se retrouvaient rognés par le
+     `overflow-x: clip` du plateau, donc inutilisables. C'est aussi ce que fait
+     le modèle : mesuré chez eux à 393 px, les deux pastilles sont posées à
+     36 px de chaque bord, par-dessus les cartes de côté. */
+  .hv-lic-deck { gap: 0; position: relative; }
+  .hv-lic-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .hv-lic-nav[data-hv-lic-nav="prev"] { left: 3.6rem; }
+  .hv-lic-nav[data-hv-lic-nav="next"] { right: 3.6rem; }
+}
+
+/* ── Mouvement réduit ────────────────────────────────────────────────────
+   L'éventail et la brillance ne sont que du décor : on les fige, la carte de
+   tête reste lisible et la navigation continue de fonctionner. */
+@media (prefers-reduced-motion: reduce) {
+  .hv-lic-slot { transition: none; }
+  .hv-lic-shine { display: none; }
+  .hv-lic-note[data-hv-lic-anim] span {
+    opacity: 1;
+    filter: none;
+    animation: none;
+  }
+}
