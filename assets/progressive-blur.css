@@ -1,0 +1,261 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Flou progressif aux bords de l'écran
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Ressource reprise de details.so/vault/blur-01, dans sa forme d'origine : huit
+   couches de `backdrop-filter` par bord, dont la force double d'une couche à la
+   suivante (0,078125 px → 10 px), chacune découpée par un masque qui la cantonne
+   à une bande de 12,5 % de la hauteur. Les bandes se chevauchent, et c'est ce
+   chevauchement qui donne un dégradé de netteté continu.
+
+   Le point à ne pas rater : on ne peut pas résumer cela à un seul élément flouté
+   sous un masque. Un masque unique fait varier l'opacité d'un flou de force
+   constante ; il ne reproduit pas l'augmentation par paliers de la force
+   elle-même. Les valeurs de flou et les arrêts de masque sont donc repris tels
+   quels — les toucher change la courbe.
+
+   Les `#000` des dégradés ne peignent rien : dans un `mask-image`, seule
+   l'opacité compte. L'effet n'a pas de couleur propre et marche donc au-dessus
+   d'un fond clair comme d'un fond sombre.
+
+   ── Ce qui a été adapté à cette page ──────────────────────────────────────
+   Trois points, vérifiés plutôt que supposés :
+
+   1. `position: fixed` tient. La ressource prévient qu'un ancêtre transformé
+      changerait le bloc conteneur et décrocherait l'effet du cadre. Vérifié sur
+      toute la chaîne au-dessus de `.body-inner`, à 1440 comme à 393 px : aucun
+      `transform`, `filter`, `perspective`, `will-change` ni `contain` qui en
+      créerait un.
+
+   2. Le `z-index: 10` d'origine est conservé. Il se place exactement où la
+      ressource le veut — au-dessus du contenu, en dessous des commandes qui
+      doivent rester nettes. L'échelle de cette page : `.article-layout` 1,
+      `.main` 2, `.home-hero-stick` 3, `.header` 100, `#cookie-consent` 600. La
+      barre de navigation et le bandeau cookies passent donc par-dessus sans
+      être floutés, et le contenu qui défile sous la barre, lui, l'est.
+
+   3. Les deux conteneurs sont posés en enfants directs de `.body-inner`, à côté
+      de `.main` — c'est-à-dire hors du conteneur Barba, comme la barre de
+      navigation. Ils survivent ainsi aux changements de page au lieu d'être
+      détruits et reconstruits à chaque transition.
+
+   ── Le déclenchement après le hero ────────────────────────────────────────
+   Seul ajout à la ressource, et il ne touche pas à sa mécanique : l'effet est
+   demandé une fois le hero passé, pas au-dessus de lui. Il reste donc masqué
+   tant que le hero occupe l'écran (voir assets/progressive-blur.js, qui ne fait
+   que poser une classe). Rien d'autre n'écoute le défilement : c'est bien le
+   `position: fixed` et la recomposition du fond qui font l'effet, pas un script.
+
+   Tenir les couches masquées quand elles ne servent pas n'est pas cosmétique :
+   seize `backdrop-filter` composés en permanence sur une page qui porte déjà un
+   canvas animé, un défilement lissé et une pile de cartes épinglée, cela se
+   paierait. `visibility: hidden` laisse le navigateur les ignorer. */
+
+.progressive-blur {
+  position: fixed;
+  z-index: 10;
+  right: 0;
+  left: 0;
+  height: 200px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.progressive-blur.top-blur {
+  --blur-direction: to bottom;
+  top: -32px;
+}
+
+.progressive-blur.bottom-blur {
+  --blur-direction: to top;
+  bottom: -32px;
+}
+
+.progressive-blur .layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.progressive-blur .blur-1 {
+  z-index: 1;
+  -webkit-backdrop-filter: blur(0.078125px);
+  backdrop-filter: blur(0.078125px);
+  -webkit-mask-image: linear-gradient(
+    var(--blur-direction),
+    transparent 87.5%,
+    #000 100%
+  );
+  mask-image: linear-gradient(
+    var(--blur-direction),
+    transparent 87.5%,
+    #000 100%
+  );
+}
+
+.progressive-blur .blur-2 {
+  z-index: 2;
+  -webkit-backdrop-filter: blur(0.15625px);
+  backdrop-filter: blur(0.15625px);
+  -webkit-mask-image: linear-gradient(
+    var(--blur-direction),
+    transparent 75%,
+    #000 87.5% 100%
+  );
+  mask-image: linear-gradient(
+    var(--blur-direction),
+    transparent 75%,
+    #000 87.5% 100%
+  );
+}
+
+.progressive-blur .blur-3 {
+  z-index: 3;
+  -webkit-backdrop-filter: blur(0.3125px);
+  backdrop-filter: blur(0.3125px);
+  -webkit-mask-image: linear-gradient(
+    var(--blur-direction),
+    transparent 62.5%,
+    #000 75% 87.5%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    var(--blur-direction),
+    transparent 62.5%,
+    #000 75% 87.5%,
+    transparent 100%
+  );
+}
+
+.progressive-blur .blur-4 {
+  z-index: 4;
+  -webkit-backdrop-filter: blur(0.625px);
+  backdrop-filter: blur(0.625px);
+  -webkit-mask-image: linear-gradient(
+    var(--blur-direction),
+    transparent 50%,
+    #000 62.5% 75%,
+    transparent 87.5%
+  );
+  mask-image: linear-gradient(
+    var(--blur-direction),
+    transparent 50%,
+    #000 62.5% 75%,
+    transparent 87.5%
+  );
+}
+
+.progressive-blur .blur-5 {
+  z-index: 5;
+  -webkit-backdrop-filter: blur(1.25px);
+  backdrop-filter: blur(1.25px);
+  -webkit-mask-image: linear-gradient(
+    var(--blur-direction),
+    transparent 37.5%,
+    #000 50% 62.5%,
+    transparent 75%
+  );
+  mask-image: linear-gradient(
+    var(--blur-direction),
+    transparent 37.5%,
+    #000 50% 62.5%,
+    transparent 75%
+  );
+}
+
+.progressive-blur .blur-6 {
+  z-index: 6;
+  -webkit-backdrop-filter: blur(2.5px);
+  backdrop-filter: blur(2.5px);
+  -webkit-mask-image: linear-gradient(
+    var(--blur-direction),
+    transparent 25%,
+    #000 37.5% 50%,
+    transparent 62.5%
+  );
+  mask-image: linear-gradient(
+    var(--blur-direction),
+    transparent 25%,
+    #000 37.5% 50%,
+    transparent 62.5%
+  );
+}
+
+.progressive-blur .blur-7 {
+  z-index: 7;
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  -webkit-mask-image: linear-gradient(
+    var(--blur-direction),
+    transparent 12.5%,
+    #000 25% 37.5%,
+    transparent 50%
+  );
+  mask-image: linear-gradient(
+    var(--blur-direction),
+    transparent 12.5%,
+    #000 25% 37.5%,
+    transparent 50%
+  );
+}
+
+.progressive-blur .blur-8 {
+  z-index: 8;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  -webkit-mask-image: linear-gradient(
+    var(--blur-direction),
+    transparent 0%,
+    #000 12.5% 25%,
+    transparent 37.5%
+  );
+  mask-image: linear-gradient(
+    var(--blur-direction),
+    transparent 0%,
+    #000 12.5% 25%,
+    transparent 37.5%
+  );
+}
+
+@media (max-width: 680px) {
+  .progressive-blur {
+    height: 160px;
+  }
+}
+
+/* ── Le déclenchement ────────────────────────────────────────────────────
+   Au repos, l'effet n'existe pas : ni peint, ni composé. La classe est posée
+   par le script dès que le hero a quitté l'écran, et retirée quand il revient.
+   La fondue vaut aussi au retour, sinon le flou disparaîtrait d'un coup en
+   remontant.
+
+   Le sélecteur est plus spécifique que la règle de base (0,2,0 contre 0,1,0),
+   ce qui évite d'avoir à compter sur l'ordre des feuilles. */
+.progressive-blur.is-armed {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.45s ease, visibility 0s linear 0.45s;
+}
+.progressive-blur.is-armed.is-on {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.45s ease, visibility 0s linear 0s;
+}
+
+/* La réserve d'overflow du thème passe avant la nôtre. `assets/viewport.css`
+   pose `overflow-x: clip; overflow-y: visible` sur tous les enfants directs de
+   `.body-inner` — dont ces deux conteneurs — à spécificité égale. On la reprend
+   ici, plus précisément, pour que le `overflow: hidden` de la ressource tienne. */
+.body-inner > .progressive-blur {
+  overflow: hidden;
+}
+
+/* ── Mouvement réduit ────────────────────────────────────────────────────
+   L'effet ne bouge pas de lui-même : seul son apparition est une transition.
+   On la supprime, le flou se pose alors sans fondu. */
+@media (prefers-reduced-motion: reduce) {
+  .progressive-blur.is-armed,
+  .progressive-blur.is-armed.is-on {
+    transition: none;
+  }
+}
